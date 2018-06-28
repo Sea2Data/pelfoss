@@ -4,17 +4,20 @@
 \alias{plotPELFOSS}
 \alias{plotTSB}
 \alias{getTSB}
+\alias{getAllTSB}
 \title{Plot the output from biomass2tsb() or runPelfoss().}
 \usage{
 plotPELFOSS(x, ncolour = 20, col = list(h = c(0.6, 0.98), s = c(0.35, 1), v
   = c(0.9, 0.3)), logColscale = TRUE, firstcol = NA, NASCthr = 0.001,
   NASCexp = 2, NASCmax_size = 2, biomAlpha = 0.1, biomShape = 20,
-  biomThr = 1, trawlSize = 2, addSuperInd = FALSE, stratumcol = NULL,
-  alldays = TRUE, ...)
+  biomSize = 2, biomThr = 1, trawlSize = 2, stratumcol = NULL,
+  plot = c("biom", "nasc", "trawl"), ...)
 
 plotTSB(x, unit = "mt")
 
 getTSB(x, unit = "mt", digits = 4)
+
+getAllTSB(dir, outfile = NULL)
 }
 \arguments{
 \item{x}{The output from \code{\link{biomass2tsb}} or \code{\link{runPelfoss}}.}

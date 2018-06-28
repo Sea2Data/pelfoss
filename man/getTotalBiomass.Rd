@@ -4,8 +4,8 @@
 \alias{getTotalBiomass}
 \title{Interpolate NORWECOM biomass onto log distances.}
 \usage{
-getTotalBiomass(superInd, stratum, days = NULL, type = c("biomass",
-  "length"), lonlatFilter = NULL)
+getTotalBiomass(superInd, stratumPolygons, strataInd = NULL, days = NULL,
+  type = c("biomass", "length"), lonlatFilter = NULL)
 }
 \arguments{
 \item{x}{The input NetCDF4 file.}

@@ -4,7 +4,6 @@
 \alias{runPelfoss}
 \alias{pelfossDefaults}
 \alias{getNorwecomPaths}
-\alias{getAllTSB}
 \title{Run the PELFOSS framework.}
 \usage{
 runPelfoss(dir, surveyPar, year = 2010, res = 4, dateshift = 0,
@@ -16,8 +15,6 @@ pelfossDefaults()
 
 getNorwecomPaths(dir, survey = "Herring_IESNS", year = 2010, res = 4,
   reversed = FALSE, dateshift = 0, seed = 0)
-
-getAllTSB(dir, outfile = NULL)
 }
 \arguments{
 \item{dir}{The directory holding the NORWECOM files, the stratum files and the output xml files from the function (temporary stored for insertion into the StoX project).}

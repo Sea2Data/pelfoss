@@ -2,10 +2,16 @@
 % Please edit documentation in R/pelfoss.R
 \name{getSuperIndOfDay}
 \alias{getSuperIndOfDay}
+\alias{getBiomassOfSurvey}
+\alias{getSuperIndOfSurvey}
 \title{Extract one day of valid superindividuals.}
 \usage{
 getSuperIndOfDay(superInd, day = NULL, maxValue = 1e+10,
   NAsByFirst = FALSE)
+
+getBiomassOfSurvey(x, daysOfSurvey = NULL)
+
+getSuperIndOfSurvey(x, midDayOfSurvey = NULL)
 }
 \arguments{
 \item{x}{The input NetCDF4 file.}
