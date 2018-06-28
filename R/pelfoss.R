@@ -842,18 +842,6 @@ getTSB <- function(x, unit="mt", digits=4){
 	# Set the significant digits:
 	areNumeric <- sapply(x$report$bootstrap$abnd, is.numeric)
 	x$report$bootstrap$abnd[areNumeric] <- signif(x$report$bootstrap$abnd[areNumeric], digits)
-	
-	
-	#
-	#
-	##TSB_mean <- x$report$bootstrap$scale * x$report$bootstrap$abnd[["Ab.Sum.mean"]]
-	##TSB_median <- x$report$bootstrap$scale * x$report$bootstrap$abnd[["Ab.Sum.50%"]]
-	#ThSB_inside <- x$totBiom$AllStrata[x$midDayOfSurvey] / x$report$bootstrap$scale
-	#ThSB_total <- x$totBiom$Total[x$midDayOfSurvey] / x$report$bootstrap$scale
-	#x$report$bootstrap$abnd <- cbind(x$report$bootstrap$abnd, ThSB_inside=ThSB_inside, ThSB_total=ThSB_total)
-	#
-	#out <- data.frame(TSB_mean=TSB_mean, TSB_median=TSB_median, ThSB_inside=ThSB_inside, ThSB_total=ThSB_total)
-	#out <- out / scale
 	x$report
 }
 #'
@@ -1715,6 +1703,6 @@ getNorwecomPaths <- function(dir, survey="Herring_IESNS", year=2010, res=4, reve
 	# Get fishery file:
 	fishery <- list.files(file.path(dir, "fishery", species), full.names=TRUE)[1]
 	
-	
+	# Return the paths:
 	list(biomass=biomass, superInd=superInd, stratum=stratum, species=species, projectPath=projectPath, survey=survey, fishery=fishery)
 }
