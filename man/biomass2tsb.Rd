@@ -2,30 +2,33 @@
 % Please edit documentation in R/pelfoss.R
 \name{biomass2tsb}
 \alias{biomass2tsb}
+\alias{biomass2nasc}
 \title{Simulate survey based on NORWECOM data.}
 \usage{
-biomass2tsb(projectName, xmlOutputDir, biomass, superInd, stratum,
+biomass2tsb(projectName, xmlOutputDir, biomass, superind, stratum,
   startdate = "31/1", dateshift = 0, centroid = c(0, 68), seed = 0,
   nboot = 10, xsd = list(acoustic = "1", biotic = "1.4"), nTrawl = 50,
   hours = list(240), type = "RectEnclZZ", knots = 10,
   equalEffort = FALSE, bearing = "along", distsep = 1, margin = 0.1,
-  tsn = 161722, m = 20, TS0 = -71.9, platform = 4174, distance = 5,
-  sweepWidth = 25, probfact = 1, radius = 10, N = 100,
+  tsn = 161722, m = 20, TS0 = -71.9, b = 3, platform = 4174,
+  distance = 5, sweepWidth = 25, probfact = 1, radius = 10, N = 100,
   cores = list(biotic = 1, acoustic = 1, bootstrap = 1), unit = "mt",
-  lonlatFilter = NULL, ...)
+  superindFilter = NULL, ...)
+
+biomass2nasc(Wg, LcmOne, a, b, m = 20, TS0 = -71.9)
 }
 \arguments{
 \item{projectName}{The biomass area density in units of g/m^2 (gram per square meter in the horizontal plane).}
 
 \item{xmlOutputDir}{The biomass area density in units of g/m^2 (gram per square meter in the horizontal plane).}
 
-\item{biomass}{The path to a NORWECOM NetCDF4 file with biomass in grams per square meter in a irregular geographical grid. The file should contain the variables "Biom", "Long" and "Latt".}
+\item{biomass}{The path to a NORWECOM NetCDF4 file with biomass in grams per square meter in a irregular geographical grid. The file should contain the variables "biomass", "longitude" and "latitude".}
 
-\item{superInd}{The path to a NORWECOM NetCDF4 file with superindividuals. The file should contain the variables "gridLongInd", "gridLattInd", "gridLong", "gridLatt", "female", "age", "inumb", "length", "sweight" and "pweight".}
+\item{superind}{The path to a NORWECOM NetCDF4 file with superindividuals. The file should contain the variables "age", "inumb", "length", "weight", "longitude" and "latitude".}
 
 \item{stratum}{The path to a file with the stratum polygons given as a two column matrix with stratum name in the first column and a MULTIPOLYGON wkt string in the second conlumn.}
 
-\item{startdate}{The start date of the survey, given as "%d/%m", e.g., 31 January is "31/1".}
+\item{startdate}{The start date of the survey, given as "\%d/\%m", e.g., 31 January is "31/1".}
 
 \item{dateshift}{An integer number of days to shift the survey by, negative values shifting to earlier in the year.}
 
@@ -33,15 +36,17 @@ biomass2tsb(projectName, xmlOutputDir, biomass, superInd, stratum,
 
 \item{seed}{A single integer, or a list of seeds used in the funciton, including the following seeds: ('transect') for drawing transects using surveyPlanner(), ('trawl') for drawing trawl stations along the transects with probability as a funciton of the NASC (see \code{probfact}), and ('bootstrap') for getting the final estimate using runBootstrap() (see \code{nboot}).}
 
+\item{nboot}{Number of bootstrap replicates.}
+
 \item{xsd}{A named list of xsd versions of the acoustic and biotic file format.}
 
 \item{nTrawl}{The number of trawls to draw. Implies a penalty on the total transect time by \code{hoursPerTrawl}.}
 
-\item{type, knots, equalEffort, bearing, distsep, margin}{See \code{\link{surveyPlanner}}}
+\item{hours, type, knots, equalEffort, bearing, distsep, margin}{See \code{\link{surveyPlanner}}}
 
 \item{tsn}{The tsn code of the species.}
 
-\item{m, TS0}{The parameters of the target strength-length relationship TS = m * log10(Lcm) + TS0, typically m = 20 and TS0 = -71.9 (herring, from Foote, K. G. 1987. Fish target strengths for use in echo integrator surveys. Journal of the Acoustical Society of America, 82: 981– 987.)}
+\item{m, TS0}{The parameters of the target strength-length relationship TS = m * log10(Lcm) + TS0, typically m = 20 and TS0 = -71.9 (herring, from Foote, K. G. 1987. Fish target strengths for use in echo integrator surveys. Journal of the Acoustical Society of America, 82: 981 - 987.)}
 
 \item{platform}{The platform to use, defaulted to G.O.Sars. Only kept for cosmetic reasons.}
 
@@ -53,13 +58,21 @@ biomass2tsb(projectName, xmlOutputDir, biomass, superInd, stratum,
 
 \item{N}{The number of individuals to draw for each trawl station.}
 
+\item{cores}{The number of cores to use for writing XML files and for the bootstrapping in the StoX project, given either as a named list such as list(biotic=1, acoustic=1, bootstrap=1), og a single numeric setting the cores for all.}
+
+\item{unit}{The unit used in the report form the StoX project (see \code{\link{getPlottingUnit}}).}
+
+\item{superindFilter}{An optional function acting on the superind data, such as longitude or latitude, e.g., superindFilter <- function(x) x$longitude < 20.}
+
 \item{...}{Arguments passed to \code{\link{surveyPlanner}}.}
 
-\item{daysOfSurvey}{The number of days reserved for the survey.}
-}
-\value{
+\item{Wg}{The biomass area density in units of g/m^2 (gram per square meter in the horizontal plane).}
 
+\item{LcmOne}{The length in cm representative of the individuals in the survey region. This length should be so that the NASC converted from the biomass in grams per square meters is unbiased. The function \code{\link{getTotalBiomass}} with type="length" can be used to obtain this value.}
+
+\item{a, b}{Parameters of the length-weight relationship Wg = a * Lcm^b, where Wg is the weight in grams and Lcm is the length in cm. Typical values are e.g., a = 0.01 and b = 3.}
 }
 \description{
-Simulate survey based on NORWECOM data.
+\code{biomass2tsb} Reads biomass and superind files, draws transects, converts biomass to NASC, draws trawl stations, creates and runs a StoX project, and saves the results. \cr \cr
+\code{biomass2nasc} Funciton for converting from a biomass density to nautical area scattering coefficient NASC (linear values, not dB) used in \code{biomass2tsb}. \cr \cr
 }

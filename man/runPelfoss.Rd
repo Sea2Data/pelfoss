@@ -2,24 +2,23 @@
 % Please edit documentation in R/pelfoss.R
 \name{runPelfoss}
 \alias{runPelfoss}
-\alias{pelfossDefaults}
-\alias{getNorwecomPaths}
 \title{Run the PELFOSS framework.}
 \usage{
-runPelfoss(dir, surveyPar, year = 2010, res = 4, dateshift = 0,
-  reversed = FALSE, seed = 0, projectName = "NORWECOM_Rstox",
-  nboot = 10, xsd = list(acoustic = "1", biotic = "1.4"), format = "png",
-  ...)
-
-pelfossDefaults()
-
-getNorwecomPaths(dir, survey = "Herring_IESNS", year = 2010, res = 4,
-  reversed = FALSE, dateshift = 0, seed = 0)
+runPelfoss(dir, biomass = NULL, superind = NULL, surveyPar = list(),
+  year = 2010, res = 4, dateshift = 0, reversed = FALSE, seed = 0,
+  projectName = "PelfossProjectRstox", nboot = 10, xsd = list(acoustic =
+  "1", biotic = "1.4"), format = "png", ...)
 }
 \arguments{
 \item{dir}{The directory holding the NORWECOM files, the stratum files and the output xml files from the function (temporary stored for insertion into the StoX project).}
 
+\item{biomass, superind}{The biomass and superind data read from \code{readNcVarsAndAttrs} (used in \code{readNorwecomBiomass} and \code{readNorwecomSuperind}).}
+
+\item{surveyPar}{A list of parameters to be used as input to biomass2tsb (see ?biomass2tsb).}
+
 \item{year, res}{The year and resolution (in km) to run. The NORWECOM files are located in the following folder structure: species / resolution / year, where the resolution folders has names such as "res_4km".}
+
+\item{dateshift}{An integer number of days to shift the survey by, negative values shifting to earlier in the year.}
 
 \item{reversed}{Logical: If TRUE run the survey in the opposite direciton.}
 
@@ -31,16 +30,10 @@ getNorwecomPaths(dir, survey = "Herring_IESNS", year = 2010, res = 4,
 
 \item{xsd}{A named list of xsd versions of the acoustic and biotic file format.}
 
+\item{format}{The file format of the saved plot, given as a string naming the function to use for saving the plot (such as bmp, jpeg, png, tiff), with \code{filename} as its first argument. Arguments fo the functions are given as \code{...}. Dimensions are defaulted to width=5000, height=3000, resolution to 500 dpi. If \code{format} has length 0, the plot is shown in the graphics window, and not saved to file.}
+
 \item{...}{Additional inputs overriding the defaults returned by pelfossDefaults().}
-
-\item{survey}{The name of the survey to simulate, one of "Herring_IESNS" (International ecosystem survey in the Nordic Seas), "Herring_NASSHS" (Norwegian acoustic spring spawning herring survey) or "Mackerel_IESSNS" (The International Ecosystem Summer Survey in the Nordic Seas)}
-
-\item{type}{The type of survey. See \code{\link{surveyPlanner}}}
-}
-\value{
-
 }
 \description{
 This function runs the entire PELFOSS framework from the NORWECOM model output files (biomass in a grid and superindividuals), through surveyPlanner() and StoX to the estimated total stock biomass compared to the corresponding theoretical values:
 }
-\keyword{internal}

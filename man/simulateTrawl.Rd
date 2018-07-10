@@ -3,19 +3,30 @@
 \name{simulateTrawl}
 \alias{simulateTrawl}
 \alias{drawTrawlStationInd}
-\title{Simulate trawl stations given NORWECOM superindividuals.}
+\title{Simulate trawl stations from superindividuals.}
 \usage{
-simulateTrawl(superInd, fishStation, seed = 0, radius = 10, nn = NULL,
-  N = 100, lengthunit = 2)
+simulateTrawl(superind, fishStation, seed = 0, radius = 10, nn = NULL,
+  N = 100, lengthunit = 2, superindFilter = NULL)
 
-drawTrawlStationInd(nasc, nstations = 1, seed = 0, probfact = 0)
+drawTrawlStationInd(NASC, nstations = 1, seed = 0, probfact = 0)
 }
 \arguments{
+\item{superind}{The superind data read from \code{readNcVarsAndAttrs} (used in \code{readNorwecomBiomass} and \code{readNorwecomSuperind}).}
+
+\item{x}{The input NetCDF4 file.}
+
+\item{x}{The input NetCDF4 file.}
+
+\item{x}{The input NetCDF4 file.}
+
+\item{x}{The input NetCDF4 file.}
+
+\item{x}{The input NetCDF4 file.}
+
 \item{x}{The input NetCDF4 file.}
 }
-\value{
-
-}
 \description{
-Simulate trawl stations given NORWECOM superindividuals.
+\code{simulateTrawl} Simulated trawl data from the superindividuals inside a \code{radius} nautical mile radius around each trawl station,  where the probability of selecting an individual from the superindividual is proportional to its number of (identical) individuals. \cr \cr
+\code{drawTrawlStationInd} Draws trawl station locations as log-distances (acoustic PSU locations), where the probability of a log-distance to be selected is a mixture of the NASC values and the uniform probability along the track. The mixture is given by the \code{probfact} argument. \cr \cr
 }
+\keyword{internal}
