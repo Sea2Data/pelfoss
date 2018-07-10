@@ -1,6 +1,6 @@
 Package: pelfoss
 Title: Simulate acosutic-trawl surveys and produce survey estimated using Rstox
-Version: 1.1.1
+Version: 1.2
 Authors@R: c(
   person("Arne Johannes", "Holmin", role = c("aut","cre"), email = "arnejh@imr.no"))
 Author: Arne Johannes Holmin [aut, cre]
