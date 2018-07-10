@@ -1,4 +1,4 @@
-# pelfoss version: 1.2 (latest beta, 2018-07-10)
+# pelfoss version: 1.2.1 (latest alpha, 2018-07-10)
 # R version: 3.5.0
 
 # The package pelfoss contains code to simulate acoustic-trawl surveys based on biomass fields from population dynamic models, and produces survey estimates using the Rstox package:
@@ -14,7 +14,7 @@ devtools::install_github("Sea2Data/pelfoss")
 # Alternatively install the latest develop version: devtools::install_github("Sea2Data/pelfoss", ref="develop")
 
 
-# Release notes pelfoss_1.2:
+# Release notes pelfoss_1.2.1:
 
 
-# For historical release notes see https://github.com/Sea2Data/pelfoss/blob/master/NEWS
+# For historical release notes see https://github.com/Sea2Data/pelfoss/blob/alpha/NEWS

@@ -1742,7 +1742,7 @@ pelfossDefaults <- function(){
 		probfact = 1, # This reserves half of the probability of drawing trawls to the NASC and half to chance
 		radius = 10, # Increase this to include more superindividuals in the trawl sample
 		N = 100, # Draw 100 fish per trawl
-		cores = 6, # Use 6 cores for both biotic and acoustic xml and bootstrap
+		cores = 1, # Use 1 core for both biotic and acoustic xml and bootstrap
 		unit = "mt",
 		platform = 4174, # G.O.Sars
 		distance = 5, # Trawling distance, equal for all stations, thus ineffective in an acousic-trawl survey
