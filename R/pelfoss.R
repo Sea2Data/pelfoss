@@ -405,8 +405,8 @@ interpolateBiomassToTransects <- function(biomass, superind, transects, centroid
 			# return(NULL)
 		}
 		
-		# Conbine to get a link to the day:
-		out <- data.frame(day=day, biomassG=zo$z, NASC=NASC, LcmMean=LcmMean, condParFactor=thisab[1], condParExponent=thisab[2])
+		# Conbine to get a link to the day (suppress a warning with row names):
+		suppressWarnings(out <- data.frame(day=day, biomassG=zo$z, NASC=NASC, LcmMean=LcmMean, condParFactor=thisab[1], condParExponent=thisab[2]))
 		return(out)
 	}
 	
@@ -1187,7 +1187,7 @@ plotPelfoss <- function(
 		p <- p + scale_fill_manual(values = rep(stratumcol, length.out=nrow(x$transects$Stratum)))
 	}
 	
-	print(p)
+	suppressWarnings(print(p))
 	list(p, p0)
 }
 ### #'
