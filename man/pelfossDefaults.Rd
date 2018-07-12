@@ -4,7 +4,10 @@
 \alias{pelfossDefaults}
 \alias{getPelfossPaths}
 \alias{createPelfossSkeleton}
-\alias{fitStandardAllometric}
+\alias{fitLengthWeightSuperindOld}
+\alias{fitLengthWeightSuperind}
+\alias{fitLengthWeight}
+\alias{plotLengthWeight}
 \title{Utility functions of the pelfoss package.}
 \usage{
 pelfossDefaults()
@@ -14,7 +17,15 @@ getPelfossPaths(dir, survey = "Herring_IESNS", year = 2010, res = 4,
 
 createPelfossSkeleton(dir)
 
-fitStandardAllometric(day, superind, superindFilter = NULL, b = NULL)
+fitLengthWeightSuperindOld(day, superind, superindFilter = NULL, b = NULL)
+
+fitLengthWeightSuperind(day, superind, count = "inumb",
+  superindFilter = NULL, a = NULL, b = NULL)
+
+fitLengthWeight(L, W = NULL, a = NULL, b = NULL, count = NULL,
+  filter = NULL)
+
+plotLengthWeight(x, cols = c(1, 2), useJitter = FALSE, ...)
 }
 \arguments{
 \item{dir}{The root directory of the pelfoss folder structure.}

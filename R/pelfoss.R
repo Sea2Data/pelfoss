@@ -395,7 +395,7 @@ interpolateBiomassToTransects <- function(biomass, superind, transects, centroid
 		
 		##### Add the NASC, by first fitting the fish length-weight relationship to the superindividual data, and then using this to convert from biomass to NASC: #####
 		#  Get first the parameters a and b in the length-weight relationship:
-		thisab <- fitStandardAllometric(day, superind, superindFilter=superindFilter, b=NULL)
+		thisab <- fitLengthWeightSuperind(day, superind, superindFilter=superindFilter, b=NULL)
 		# Get the mean of the square length weighted by the number of indivudyals per superindividual:
 		LcmMean <- getTotalBiomass(superind=superind, stratumPolygons=stratumUnionMatrix, days=day, type="length")$AllStrata
 		# Convert to NASC
@@ -1797,7 +1797,7 @@ createPelfossSkeleton <- function(dir){
 #' @importFrom stats weighted.mean coef lm
 #' @rdname pelfossDefaults
 #' 
-fitStandardAllometric <- function(day, superind, superindFilter=NULL, b=NULL){
+fitLengthWeightSuperindOld <- function(day, superind, superindFilter=NULL, b=NULL){
 	# Get the superindividual data of the requested day(s):
 	superind1 <- getSuperindOfDay(superind=superind, day=day, superindFilter=superindFilter)
 	
@@ -1823,3 +1823,159 @@ fitStandardAllometric <- function(day, superind, superindFilter=NULL, b=NULL){
 	out[1] <- exp(out[1])
 	out
 }
+#'
+#' @export
+#' @keywords internal
+#' @rdname pelfossDefaults
+#' 
+fitLengthWeightSuperind <- function(day, superind, count="inumb", superindFilter=NULL, a=NULL, b=NULL){
+	# Get the superindividual data of the requested day(s):
+	superind1 <- getSuperindOfDay(superind=superind, day=day, superindFilter=superindFilter)
+	
+	# Define the data frame of weight and length:
+	data <- as.data.frame(superind1[c("weight", "length", "inumb")])
+	
+	fitLengthWeight(data, count=if(length(count)) data[[count]] else NULL, a=a, b=b)
+}
+#'
+#' @export
+#' @keywords internal
+#' @importFrom stats coef lm
+#' @rdname pelfossDefaults
+#' 
+fitLengthWeight <- function(L, W=NULL, a=NULL, b=NULL, count=NULL, filter=NULL){
+	# The standard allomettric formula is 
+	#    W = a * L^b, 
+	# where W is weight and L is length, and a and b are parameters.
+	# Taking the logarithm and rearranging leads to 
+	#    log(W) = log(a) + b * log(L)
+	# Thus we transform W and L according to this fomula, and transform any estimate of a in the output
+	
+	# Read the input data, and create a data frame:
+	if(length(L)>0 && length(L) == length(W)){
+		data <- data.frame(length=L, weight=W)
+	}
+	else if(is.data.frame(L) && all(c("length", "weight") %in% names(L))){
+		data <- L
+	}
+	else{
+		warning("The input must be a data frame with columns 'length' and 'weight'")
+		return(NULL)
+	}
+	# Add the count if present:
+	if(length(count) == nrow(data)){
+		data$count <- count
+	}
+	
+	# Apply the filter:
+	if(is.function(filter)){
+		insideFilter <- which(filter(data))
+		data <- data[insideFilter, ]
+	}
+	
+	
+	# create the formula to use, depending on whether a, b, or both should be estimated:
+	useExp <- 0
+	if(length(a)==0 && length(b)==1){
+		formula <- log(weight) - b * log(length) ~ 1
+		fitnames <- "a"
+		useExp <- 1
+	}
+	else if(length(a)==1 && length(b)==0){
+		formula <- log(weight) - a ~ log(length) + 0
+		fitnames <- "b"
+	}
+	else if(length(a)==0 && length(b)==0){
+		formula <- log(weight) ~ log(length) + 1
+		fitnames <- c("a", "b")
+		useExp <- 1
+	}
+	else{
+		warning("One of a or b must be empty, otherwise nothing will be estimated")
+		return(NULL)
+	}
+	
+	
+	fit <- coef(lm(formula, weights=data$count, data=data))
+	
+	# Transform a:
+	if(useExp==1){
+		fit[1] <- exp(fit[1])
+	}
+	
+	# Add the appropriate names:
+	names(fit) <- fitnames
+	
+	
+	out <- list(fit=fit, data=data, par=list(a=a, a=b))
+
+	return(out)
+}
+#'
+#' @export
+#' @keywords internal
+#' @importFrom ggplot2 ggplot aes_string geom_jitter geom_point geom_path
+#' @rdname pelfossDefaults
+#' 
+plotLengthWeight <- function(x, cols=c(1, 2), useJitter=FALSE, ...){
+	p <- ggplot(data=x$data, aes_string(x="length", y="weight", if(length(x$data$count)) color=x$data$count))
+	
+	p <- p + do.call(if(useJitter) geom_jitter else geom_point, list(...))
+
+	rangeL <- range(x$data$length, na.rm=TRUE)
+	gridL <- seq(rangeL[1], rangeL[2], l=100)
+	p <- p + geom_path(data=data.frame(x=gridL, y=x$fit["a"] * gridL^x$fit["b"]), aes_string(x="x", y="y"), color=cols[2])
+	p
+}
+
+
+
+
+
+
+
+
+
+	
+	
+### 	
+### 	
+### 	
+### 	# Thus we transform W and L according to this fomula, and transforms any estimate of a in the output:
+### 	logW <- log(W)
+### 	logL <- log(L)
+### 	
+### 	useExp <- 0
+### 	if(length(a)==0 && length(b)==1){
+### 		formula <- logW - b*logL ~ 1
+### 		fitnames <- "a"
+### 		useExp <- 1
+### 	}
+### 	else if(length(a)==1 && length(b)==0){
+### 		formula <- logW - a ~ logL + 0
+### 		fitnames <- "b"
+### 	}
+### 	else if(length(a)==0 && length(b)==0){
+### 		formula <- logW ~ logL + 1
+### 		fitnames <- c("a", "b")
+### 		useExp <- 1
+### 	}
+### 	else{
+### 		warning("One of a or b must be empty, otherwise nothing will be estimated")
+### 		return(NULL)
+### 	}
+### 	
+### 	fit <- coef(lm(formula, weights=weights))
+### 	
+### 	# Transform a:
+### 	if(useExp==1){
+### 		fit[1] <- exp(out[1])
+### 	}
+### 	
+### 	names(fit) <- fitnames
+### 	
+### 	out <- list(fit=fit, W=W, L=L, weights=weights, input_a=a, input_b=b)
+### 
+### 	return(out)
+### }
+### 
