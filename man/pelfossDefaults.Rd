@@ -2,6 +2,7 @@
 % Please edit documentation in R/pelfoss.R
 \name{pelfossDefaults}
 \alias{pelfossDefaults}
+\alias{getPelfossSkeleton}
 \alias{getPelfossPaths}
 \alias{createPelfossSkeleton}
 \alias{fitLengthWeightSuperindOld}
@@ -12,12 +13,15 @@
 \usage{
 pelfossDefaults()
 
-getPelfossPaths(dir, survey = "Herring_IESNS", year = 2010, res = 4,
-  reversed = FALSE, dateshift = 0, seed = 0)
+getPelfossSkeleton(dir, run = "Run1")
 
-createPelfossSkeleton(dir)
+getPelfossPaths(dirs, survey = "Herring_IESNS", year = 2010, res = 4,
+  reversed = FALSE, dateshift = 0, seed = 0, run = NULL)
 
-fitLengthWeightSuperindOld(day, superind, superindFilter = NULL, b = NULL)
+createPelfossSkeleton(dir, run = "Run1")
+
+fitLengthWeightSuperindOld(day, superind, superindFilter = NULL,
+  b = NULL)
 
 fitLengthWeightSuperind(day, superind, count = "inumb",
   superindFilter = NULL, a = NULL, b = NULL)
@@ -28,7 +32,7 @@ fitLengthWeight(L, W = NULL, a = NULL, b = NULL, count = NULL,
 plotLengthWeight(x, cols = c(1, 2), useJitter = FALSE, ...)
 }
 \arguments{
-\item{dir}{The root directory of the pelfoss folder structure.}
+\item{dirs}{A list of paths to directories as returned from \code{link{getPelfossSkeleton}}.}
 
 \item{survey}{The survey name.}
 

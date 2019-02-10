@@ -1,6 +1,6 @@
 Package: pelfoss
 Title: Simulate acosutic-trawl surveys and produce survey estimated using Rstox
-Version: 1.2.1
+Version: 1.2.2
 Authors@R: c(
   person("Arne Johannes", "Holmin", role = c("aut","cre"), email = "arnejh@imr.no"))
 Author: Arne Johannes Holmin [aut, cre]
@@ -10,7 +10,7 @@ Description: The package pelfoss contains code to simulate acoustic-trawl survey
 BugReports: https://github.com/Sea2Data/pelfoss/issues
 License: LGPL-3
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 Imports:
 		fields,
 		ggplot2,

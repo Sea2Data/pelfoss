@@ -8,10 +8,11 @@
 \usage{
 getSuperindOfDay(superind, day = NULL, superindFilter = NULL)
 
-getBiomassOfSurvey(x, daysOfSurvey = NULL)
+getBiomassOfSurvey(x, daysOfSurvey = NULL, fresh = FALSE)
 
-getTotalBiomass(superind, stratumPolygons, strataInd = NULL, days = NULL,
-  type = c("biomass", "length"), superindFilter = NULL)
+getTotalBiomass(superind, stratumPolygons, strataInd = NULL,
+  days = NULL, type = c("biomass", "length"), superindFilter = NULL,
+  union = FALSE)
 }
 \arguments{
 \item{day}{The day on which to extract the superind data.}

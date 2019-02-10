@@ -4,13 +4,16 @@
 \alias{runPelfoss}
 \title{Run the PELFOSS framework.}
 \usage{
-runPelfoss(dir, biomass = NULL, superind = NULL, surveyPar = list(),
-  year = 2010, res = 4, dateshift = 0, reversed = FALSE, seed = 0,
-  projectName = "PelfossProjectRstox", nboot = 10, xsd = list(acoustic =
-  "1", biotic = "1.4"), format = "png", ...)
+runPelfoss(dir, run = "Run1", biomass = NULL, superind = NULL,
+  surveyPar = list(), year = 2010, res = 4, dateshift = 0,
+  reversed = FALSE, seed = 0, projectName = "PelfossProjectRstox",
+  nboot = 10, xsd = list(acoustic = "1", biotic = "1.4"),
+  format = "png", ...)
 }
 \arguments{
 \item{dir}{The directory holding the NORWECOM files, the stratum files and the output xml files from the function (temporary stored for insertion into the StoX project).}
+
+\item{run}{The name of the run, which could be used to reflect the input parameters, such as "Run1_parallel" or "Run1_zigzag".}
 
 \item{biomass, superind}{The biomass and superind data read from \code{readNcVarsAndAttrs} (used in \code{readNorwecomBiomass} and \code{readNorwecomSuperind}).}
 
@@ -35,5 +38,5 @@ runPelfoss(dir, biomass = NULL, superind = NULL, surveyPar = list(),
 \item{...}{Additional inputs overriding the defaults returned by pelfossDefaults().}
 }
 \description{
-This function runs the entire PELFOSS framework from the NORWECOM model output files (biomass in a grid and superindividuals), through surveyPlanner() and StoX to the estimated total stock biomass compared to the corresponding theoretical values:
+This function runs the entire PELFOSS framework from the NORWECOM model output files (biomass in a grid and superindividuals), through surveyPlaner() and StoX to the estimated total stock biomass compared to the corresponding theoretical values:
 }

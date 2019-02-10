@@ -7,13 +7,13 @@
 \usage{
 biomass2tsb(projectName, xmlOutputDir, biomass, superind, stratum,
   startdate = "31/1", dateshift = 0, centroid = c(0, 68), seed = 0,
-  nboot = 10, xsd = list(acoustic = "1", biotic = "1.4"), nTrawl = 50,
-  hours = list(240), type = "RectEnclZZ", knots = 10,
-  equalEffort = FALSE, bearing = "along", distsep = 1, margin = 0.1,
-  tsn = 161722, m = 20, TS0 = -71.9, b = 3, platform = 4174,
-  distance = 5, sweepWidth = 25, probfact = 1, radius = 10, N = 100,
-  cores = list(biotic = 1, acoustic = 1, bootstrap = 1), unit = "mt",
-  superindFilter = NULL, ...)
+  nboot = 10, xsd = list(acoustic = "1", biotic = "1.4"),
+  nTrawl = 50, hours = list(240), type = "RectEnclZZ", knots = 10,
+  equalEffort = FALSE, bearing = "along", distsep = 1,
+  margin = 0.1, tsn = 161722, m = 20, TS0 = -71.9, b = 3,
+  platform = 4174, distance = 5, sweepWidth = 25, probfact = 1,
+  radius = 10, N = 100, cores = list(biotic = 1, acoustic = 1,
+  bootstrap = 1), unit = "mt", superindFilter = NULL, ...)
 
 biomass2nasc(Wg, LcmOne, a, b, m = 20, TS0 = -71.9)
 }
@@ -44,7 +44,7 @@ biomass2nasc(Wg, LcmOne, a, b, m = 20, TS0 = -71.9)
 
 \item{hours, type, knots, equalEffort, bearing, distsep, margin}{See \code{\link{surveyPlanner}}}
 
-\item{tsn}{The tsn code of the species.}
+\item{tsn}{The tsn code of the species. Default is 161722 (herring). Run taxa <- getNMDinfo("taxa") to get a data frame of species used by the IMR (takes 2 min to download and process).}
 
 \item{m, TS0}{The parameters of the target strength-length relationship TS = m * log10(Lcm) + TS0, typically m = 20 and TS0 = -71.9 (herring, from Foote, K. G. 1987. Fish target strengths for use in echo integrator surveys. Journal of the Acoustical Society of America, 82: 981 - 987.)}
 
