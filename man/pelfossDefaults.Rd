@@ -5,7 +5,6 @@
 \alias{getPelfossSkeleton}
 \alias{getPelfossPaths}
 \alias{createPelfossSkeleton}
-\alias{fitLengthWeightSuperindOld}
 \alias{fitLengthWeightSuperind}
 \alias{fitLengthWeight}
 \alias{plotLengthWeight}
@@ -15,16 +14,15 @@ pelfossDefaults()
 
 getPelfossSkeleton(dir, run = "Run1")
 
-getPelfossPaths(dirs, survey = "Herring_IESNS", year = 2010, res = 4,
-  reversed = FALSE, dateshift = 0, seed = 0, run = NULL)
+getPelfossPaths(dirs, run = "Run1", survey = "Herring_IESNS",
+  year = 2010, res = 4, reversed = FALSE, dateshift = 0,
+  seed = 0)
 
 createPelfossSkeleton(dir, run = "Run1")
 
-fitLengthWeightSuperindOld(day, superind, superindFilter = NULL,
-  b = NULL)
-
-fitLengthWeightSuperind(day, superind, count = "inumb",
-  superindFilter = NULL, a = NULL, b = NULL)
+fitLengthWeightSuperind(superindDay, superind, count = "inumb",
+  superindFilter = NULL, stratumPolygons = NULL, a = NULL,
+  b = NULL, transectsXyOfDay = NULL, insideRange = NULL)
 
 fitLengthWeight(L, W = NULL, a = NULL, b = NULL, count = NULL,
   filter = NULL)

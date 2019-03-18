@@ -15,9 +15,9 @@ readNorwecomBiomass(ncfile, centroid, vars = c("Biom", "Long", "Latt"),
   rename = list(Biom = "biomass", Long = "longitude", Latt = "latitude"))
 
 readNorwecomSuperind(ncfile, centroid, vars = c("xpos", "ypos", "Long",
-  "Latt", "female", "age", "length", "pweight", "inumb", "site"),
+  "Latt", "female", "age", "length", "pweight", "inumb", "site", "stage"),
   rename = list(pweight = "weight"), na.rm = TRUE, maxValue = 1e+10,
-  excludeSite4 = TRUE)
+  excludeSite4 = TRUE, stagesToRemove = c(0, 1, 2))
 
 getNorwecomSuperindLonLat(superind)
 
@@ -25,8 +25,8 @@ projLonLat2XY(x, centroid, proj = "aeqd", units = "kmi", x_0 = 0,
   y_0 = 0, ellps = "WGS84", datum = "WGS84")
 
 interpolateBiomassToTransects(biomass, superind, transects, centroid,
-  dayvec, lonlatmargin = 0.05, superindFilter = NULL, m = 20,
-  TS0 = -71.9)
+  logDays, lonlatmargin = 0.05, superindFilter = NULL, m = 20,
+  TS0 = -71.9, insideRange = NULL, condPar = NULL, LcmMean = NULL)
 }
 \arguments{
 \item{ncfile}{The input NetCDF4 file with a (possibly irregular) grid of biomass in gram per square meters, and geographical positions (see the input \code{vars}).}
@@ -49,7 +49,7 @@ interpolateBiomassToTransects(biomass, superind, transects, centroid,
 
 \item{transects}{The output from \code{\link{surveyPlanner}}.}
 
-\item{dayvec}{A vector of the days in the biomass data at which the log distances in \code{transects} are timed.}
+\item{logDays}{A vector of the days in the biomass data at which the log distances in \code{transects} are timed.}
 
 \item{lonlatmargin}{The margin to expand the ranges of longitude and latitude when interpolating each stratum. A large value demands more CPU time and memory.}
 

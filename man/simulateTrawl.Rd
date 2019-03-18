@@ -6,7 +6,8 @@
 \title{Simulate trawl stations from superindividuals.}
 \usage{
 simulateTrawl(superind, fishStation, seed = 0, radius = 10,
-  nn = NULL, N = 100, lengthunit = 2, superindFilter = NULL)
+  nn = NULL, N = 100, lengthunit = 2, superindFilter = NULL,
+  LcmMean = NULL)
 
 drawTrawlStationInd(NASC, nstations = 1, seed = 0, probfact = 0)
 }

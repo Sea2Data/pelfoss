@@ -3,25 +3,25 @@
 \name{getSuperindOfDay}
 \alias{getSuperindOfDay}
 \alias{getBiomassOfSurvey}
-\alias{getTotalBiomass}
+\alias{getTotalBiomassOld}
 \title{Extract dayly subsets of biomass and superind.}
 \usage{
-getSuperindOfDay(superind, day = NULL, superindFilter = NULL)
+getSuperindOfDay(superind, superindDay = NULL, superindFilter = NULL,
+  stratumPolygons = NULL, transectsXyOfDay = NULL,
+  insideRange = NULL)
 
 getBiomassOfSurvey(x, daysOfSurvey = NULL, fresh = FALSE)
 
-getTotalBiomass(superind, stratumPolygons, strataInd = NULL,
+getTotalBiomassOld(superind, stratumPolygons, strataInd = NULL,
   days = NULL, type = c("biomass", "length"), superindFilter = NULL,
-  union = FALSE)
+  union = FALSE, transectsXyOfDay = NULL, insideRange = NULL)
 }
 \arguments{
-\item{day}{The day on which to extract the superind data.}
-
 \item{superindFilter}{A function such as superindFilter <- function(x){x$Long < 20 & x$Lat < 70}, taking the superind data as input and returning a logical vector discarding certain longitude/latitude combinations.}
 
-\item{daysOfSurvey}{A vector of the days of the survey over which to average the biomass.}
-
 \item{stratumPolygons}{A named list of stratum polygons as data frames with longitude in the first column and latitude in the second.}
+
+\item{daysOfSurvey}{A vector of the days of the survey over which to average the biomass.}
 
 \item{strataInd}{A vector of indices of the strata to compute the total biomass over.}
 
@@ -30,6 +30,8 @@ getTotalBiomass(superind, stratumPolygons, strataInd = NULL,
 \item{type}{A string specifying the type of calculation (first element used), one of "biomass" and "length", returning total biomass and the length that would result in unbiased estimated total biomass if bioass was converted to NASC and aggregated throughout the survey region.}
 
 \item{biomass, superind}{The biomass and superind data read from \code{readNcVarsAndAttrs} (used in \code{readNorwecomBiomass} and \code{readNorwecomSuperind}).}
+
+\item{day}{The day on which to extract the superind data.}
 
 \item{NAsByFirst}{Logical: If TRUE, identify NAs by the first day of the superind data.}
 

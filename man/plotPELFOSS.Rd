@@ -15,7 +15,7 @@ plotPelfoss(x, ncolour = 20, col = list(h = c(0.6, 0.98), s = c(0.35,
 
 getTSB(x, unit = "mt", digits = 4)
 
-getAllTSB(dir, run = "Run1", outfile = NULL)
+getAllTSB(dir, run = "Run1", outfile = NULL, copy = TRUE)
 }
 \arguments{
 \item{x}{The output from \code{\link{biomass2tsb}} or \code{\link{runPelfoss}}.}

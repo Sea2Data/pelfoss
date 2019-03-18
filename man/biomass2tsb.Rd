@@ -10,10 +10,11 @@ biomass2tsb(projectName, xmlOutputDir, biomass, superind, stratum,
   nboot = 10, xsd = list(acoustic = "1", biotic = "1.4"),
   nTrawl = 50, hours = list(240), type = "RectEnclZZ", knots = 10,
   equalEffort = FALSE, bearing = "along", distsep = 1,
-  margin = 0.1, tsn = 161722, m = 20, TS0 = -71.9, b = 3,
-  platform = 4174, distance = 5, sweepWidth = 25, probfact = 1,
-  radius = 10, N = 100, cores = list(biotic = 1, acoustic = 1,
-  bootstrap = 1), unit = "mt", superindFilter = NULL, ...)
+  margin = 0.1, tsn = 161722, m = 20, TS0 = -71.9,
+  condPar = NULL, LcmMean = NULL, platform = 4174, distance = 5,
+  sweepWidth = 25, probfact = 1, radius = 10, N = 100,
+  cores = list(biotic = 1, acoustic = 1, bootstrap = 1), unit = "mt",
+  superindFilter = NULL, stagesToRemove = c(0, 1, 2), ...)
 
 biomass2nasc(Wg, LcmOne, a, b, m = 20, TS0 = -71.9)
 }
@@ -48,13 +49,17 @@ biomass2nasc(Wg, LcmOne, a, b, m = 20, TS0 = -71.9)
 
 \item{m, TS0}{The parameters of the target strength-length relationship TS = m * log10(Lcm) + TS0, typically m = 20 and TS0 = -71.9 (herring, from Foote, K. G. 1987. Fish target strengths for use in echo integrator surveys. Journal of the Acoustical Society of America, 82: 981 - 987.)}
 
+\item{condPar}{A two element vector representing the condition parameters a and b in the standard allomettric formula W = a * L^b.}
+
+\item{LcmMean}{The characteristic fish length representing the mean acoustic backscatter, typically calculated as sqrt(mean(L^2)).}
+
 \item{platform}{The platform to use, defaulted to G.O.Sars. Only kept for cosmetic reasons.}
 
 \item{distance, sweepWidth}{The trawled distance and the seew width of the simulated trawl.}
 
 \item{probfact}{A numeric indicating an addition in the probability of selecting a log distance for trawling. I.e., add probfact / numberOfTransects to each log distance probability NASC / sum(NASC), and normalize to toal probability = 1.}
 
-\item{radius}{The radius around the trawl station within which individuals are drawn from the superindividuals.}
+\item{radius}{The radius around the trawl station within which individuals are drawn from the superindividuals. If given as a numeric vector of length 2, the second element is interpreted as the radius inside which superindividuals are selected when converting from biomass in gram/square meter to nautical area scattering coefficient NASC.}
 
 \item{N}{The number of individuals to draw for each trawl station.}
 
