@@ -10,15 +10,15 @@ plotPelfoss(x, ncolour = 20, col = list(h = c(0.6, 0.98), s = c(0.35,
   1), v = c(0.9, 0.3)), logColscale = TRUE, firstcol = NA,
   NASCthr = 0.001, NASCexp = 2, NASCmax_size = 2, biomAlpha = 0.1,
   biomShape = 20, biomSize = 2, biomThr = 1, trawlSize = 2,
-  stratumcol = NULL, plot = c("biom", "nasc", "trawl"),
-  daysOfSurvey = NULL, ...)
+  stratumcol = NULL, plot = c("biom", "nasc", "trawl", "super"),
+  daysOfSurvey = NULL, timerange = NULL, ...)
 
 getTSB(x, unit = "mt", digits = 4)
 
 getAllTSB(dir, run = "Run1", outfile = NULL, copy = TRUE)
 }
 \arguments{
-\item{x}{The output from \code{\link{biomass2tsb}} or \code{\link{runPelfoss}}.}
+\item{x}{The output from \code{\link{biomass2tsb}} (containing object named report, totalBiomass, superind, transects, biomass).}
 
 \item{ncolour}{The number of colours used to plot the biomass field in layers.}
 

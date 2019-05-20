@@ -3,7 +3,7 @@
 \name{getSuperindOfDay}
 \alias{getSuperindOfDay}
 \alias{getBiomassOfSurvey}
-\alias{getTotalBiomassOld}
+\alias{getTotalBiomass}
 \title{Extract dayly subsets of biomass and superind.}
 \usage{
 getSuperindOfDay(superind, superindDay = NULL, superindFilter = NULL,
@@ -12,7 +12,7 @@ getSuperindOfDay(superind, superindDay = NULL, superindFilter = NULL,
 
 getBiomassOfSurvey(x, daysOfSurvey = NULL, fresh = FALSE)
 
-getTotalBiomassOld(superind, stratumPolygons, strataInd = NULL,
+getTotalBiomass(superind, stratumPolygons, strataInd = NULL,
   days = NULL, type = c("biomass", "length"), superindFilter = NULL,
   union = FALSE, transectsXyOfDay = NULL, insideRange = NULL)
 }
@@ -39,7 +39,7 @@ getTotalBiomassOld(superind, stratumPolygons, strataInd = NULL,
 }
 \description{
 \code{getSuperindOfDay} Gets the superind data of one day. \cr \cr
-\code{getBiomassOfSurvey} Gets the biomass data of all days of a survey. \cr \cr
+\code{getBiomassOfSurvey} Gets the average biomass data of all days of a survey. \cr \cr
 \code{getTotalBiomass} Gets the total biomass/'fish length which would produce an unbiased biomass via acoustic backscattering'. Uses the superind data. \cr \cr
 }
 \keyword{internal}
