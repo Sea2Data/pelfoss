@@ -1568,8 +1568,10 @@ simulateTrawl <- function(superind, fishStation, seed=0, radius=10, nn=NULL, N=1
 			minDist = min(d),
 			specimenno = seq_len(N), 
 			lengthunit = lengthunit, 
-			# Use the input LcmMean if present (forcing the lengths to a single value, used for testing):
-			length = if(length(LcmMean)) LcmMean else thisSuperind$length[s],
+			### OLD: # Use the input LcmMean if present (forcing the lengths to a single value, used for testing):
+			### This was removed on 2019-05-22, after discovering that all lengths were equal to LcmMean in the biotic files when this was set in as input to the conversion from biomass to NASC. LcmMean should not be used in the reversed conversion, i.e., from NASC to biomass, in StoX:
+			### length = if(length(LcmMean)) LcmMean else thisSuperind$length[s],
+			length = thisSuperind$length[s],
 			sex = 2 - thisSuperind$female[s], # The definition of biotic xml has male=2 and female=1. In the Norwecom model male=0 and female=1.
 			weight.individual = thisSuperind$weight[s],
 			age..agedetermination.1 = thisSuperind$age[s]
@@ -2442,7 +2444,7 @@ runAll <- function(spec, run, dir, surveyPar, seed=1, nboot=100, radius=10, subs
 #'
 #' @param type							The survey design type (see \code{\link[Rstox]{surveyPlanner}}).
 #' @param run							The name of the simulation run (which is three timings (-30, 0, +30 days), two directions (normal, reversed), and two resolutions (low, high), in total 12 individual runs).
-#' @param survey						The name of the survey to run, one of "Herring_IESNS", "Herring_NASSHS", "Herring_NASSHS_fishery", "Mackerel_IESSNS", "Mackerel_IESSNS_sept" and "Mackerel_IESSNS_sept_fishery".
+#' @param survey						The name(s) of the survey(s) to run. Must be one or more of "Herring_IESNS", "Herring_NASSHS", "Herring_NASSHS_fishery", "Mackerel_IESSNS", "Mackerel_IESSNS_sept" and "Mackerel_IESSNS_sept_fishery", which are the surveys used in the Paper 1 of the PELFOSS project.
 #' @param dir							The directory of the PELFOSS folder structure (see \code{\link{getPelfossSkeleton}}).
 #' @param speedFact						A factor to speed the survey up or down by. Values larger than 1 speed up and values smaller than 1 slow down.
 #' @param condPar						A vector of two elements giving the parameters a and b in the length-weight relationship Wg = a * Lcm^b, where Wg is the weight in grams and Lcm is the length in cm. Typical values are e.g., a = 0.01 and b = 3. If not set, this will be estimated from the super individuals, possibly inside a radius given as the second elements of \code{radius}.
@@ -2457,6 +2459,183 @@ runAll <- function(spec, run, dir, surveyPar, seed=1, nboot=100, radius=10, subs
 #'
 #' @export
 #'
+#' @examples
+#' \dontrun{
+#' # Script for running experiments for Paper 1 in the PELFOSS project:
+#' 
+#' # The experiment requires the Rstox and pelfoss package to be installed (see https://github.com/Sea2Data/Rstox and https://github.com/Sea2Data/pelfoss for install instructions):
+#' library(pelfoss)
+#' library(Rstox)
+#' 
+#' # Define the directory in which to run the simulation experiments:
+#' dir <- "~/Projects/PELFOSS"
+#' # Download the simulation experiment folder to the experiment directory:
+#' expermientURL <- ""
+#' temp <- download.file(expermientURL, dir)
+#' unzip(temp)
+#' 
+#' # Specify to use parallel transect lines:
+#' type <- "Parallel"
+#' # Specify the number of bootstrap replicates used in the variance estimation of the survey estimates:
+#' nboot <- 100
+#' # Define the year and resolution, and the shift by date and direction, which will constitute a grid in the function runAllPelfossPaper1():
+#' year <- 2012
+#' res <- 10
+#' dateshift <- c(-30, 0, 30)
+#' reversed <- c(FALSE, TRUE)
+#' # Define the radius inside which the trawl stations are drawn:
+#' radius <- 10
+#' # Define the surveys to run:
+#' survey = c(
+#' 	"Herring_IESNS", 
+#' 	"Herring_NASSHS", 
+#' 	"Herring_NASSHS_fishery", 
+#' 	"Mackerel_IESSNS", 
+#' 	"Mackerel_IESSNS_sept", 
+#' 	"Mackerel_IESSNS_sept_fishery"
+#' )
+#' # Define the names of the 
+#' runs <- c(
+#' 	"Parallel", 
+#' 	"Parallel_Fixed_abL", 
+#' 	"Parallel_Fixed_abL_SpeedTimes50", 
+#' )
+#' # Run for seeds 1 and 2:
+#' seeds <- c(1, 2)
+#' # Write xml files and run boostrapping on multiple cores:
+#' cores <- 8
+#' 
+#' ################
+#' ##### Runs #####
+#' ################
+#' ############################################################
+#' ##### 1. Parallel, with with estimation of W0 and L0: ######
+#' ############################################################
+#' for(seed %in% seeds){
+#' 	Parallel_Fixed_abL <- runAllPelfossPaper1(
+#' 		type=type, run=runs[1], survey=survey, dir=dir, # Paths and names
+#' 	year=year, res=res, dateshift=dateshift, reversed=reversed, # spec
+#' 	seed=seed, nboot=nboot, radius=radius, subset="all", cores=cores
+#' 	)
+#' }
+#' ############################################################
+#' 
+#' ############################################################
+#' ##### 2. Parallel, with 'condPar' and 'LcmMean' fixed: #####
+#' ############################################################
+#' for(seed %in% seeds){
+#' 	Parallel_Fixed_abL <- runAllPelfossPaper1(
+#' 		type=type, run=runs[2], survey=survey, dir=dir, # Paths and names
+#' 		condPar=c(0.3, 2), LcmMean=30, 
+#' 		year=year, res=res, dateshift=dateshift, reversed=reversed, # spec
+#' 		seed=seed, nboot=nboot, radius=radius, subset="all", cores=cores
+#' 	)
+#' }
+#' ############################################################
+#' 
+#' ############################################################
+#' ##### 3. Parallel, with 'condPar' and 'LcmMean' fixed ######
+#' ############# and survey conducted on one day: #############
+#' ############################################################
+#' for(seed %in% seeds){
+#' 	Parallel_Fixed_abL <- runAllPelfossPaper1(
+#' 		type=type, run=runs[3], survey=survey, dir=dir, # Paths and names
+#' 		speedFact=50, condPar=c(0.3, 2), LcmMean=30, 
+#' 		year=year, res=res, dateshift=dateshift, reversed=reversed, # spec
+#' 		seed=seed, nboot=nboot, radius=radius, subset="all", cores=cores
+#' 	)
+#' }
+#' ############################################################
+#' 	
+#' ###################
+#' ##### Reports #####
+#' ###################
+#' # Get all reports (set copy = FALSE to speed up if rerunning this function):
+#' reports <- lapply(runs, reportAllPelfoss, dir=dir, copy=TRUE)
+#' names(reports) <- runs
+#' 
+#' # Show the parameters:
+#' headPar <- lapply(runs, function(this) head(reports[[this]]$par))
+#' names(headPar) <- runs
+#' headPar
+#' 
+#' #################
+#' ##### Plots #####
+#' #################
+#' #  Plots with ylim up ro 2.15:
+#' temp <- lapply(runs, plotAllPelfossReports, dir=dir, by="InsideAll", ylim=c(0, 2.15), save="allPlots_max2.15_cv_allSeeds", case_adj=c(0.5, 0.95), add.cv=TRUE)
+#' 
+#' # Read the reports back in from the experiment referred to in the PELFOSS Paper 1:
+#' run <- runs[2]
+#' r <- readAllPelfossReports(run, dir=dir)
+#' 
+#' # Write a table for use in supplementary materials:
+#' columnsToKeep <- c(
+#' 	"Survey", 
+#' 	"Resolution", 
+#' 	"Year", 
+#' 	"Direction", 
+#' 	"Timing", 
+#' 	"Seed", 
+#' 	"TSB_meanByInsideAll", 
+#' 	"TSB_5percentByInsideAll", 
+#' 	"TSB_95percentByInsideAll", 
+#' 	"Ab.Sum.cv"
+#' )
+#' newNames <- c(
+#' 	"Survey", 
+#' 	"Resolution", 
+#' 	"Year", 
+#' 	"Direction", 
+#' 	"Timing", 
+#' 	"Seed", 
+#' 	"TSB_mean", 
+#' 	"TSB_5percent", 
+#' 	"TSB_95percent", 
+#' 	"TSB_CV"
+#' )
+#' rsmall <- r[columnsToKeep]
+#' names(rsmall) <- newNames
+#' head(rsmall)
+#' outfile <- file.path(dir, "runs", run, "reports", "allReportsSmall.txt")
+#' write.table(rsmall, file=outfile, sep="\t", dec=".", row.names=FALSE, fileEncoding="UTF-8")
+#' 
+#' #######################
+#' ##### Diagnostics #####
+#' #######################
+#' ##### Absolute relative change from seed 1 to seed 2:
+#' summary(abs(dd$TSB_mean[dd$Seed == 2] - dd$TSB_mean[dd$Seed == 1]) /  dd$TSB_mean[dd$Seed == 1])
+#' 
+#' ##### CVs for the 6 surveys:
+#' surveys <- unique(dd$Survey)
+#' CV <- sapply(surveys, function(x) summary(dd$TSB_CV[dd$Survey == x]))
+#' colnames(CV) <- surveys
+#' round(CV, digits=2)
+#' #         Herring_IESNS Herring_NASSHS Herring_NASSHS_fishery Mackerel_IESSNS Mackerel_IESSNS_sept Mackerel_IESSNS_sept_fishery
+#' # Min.             0.12           0.02                   0.01            0.08                 0.08                         0.05
+#' # 1st Qu.          0.13           0.06                   0.02            0.13                 0.10                         0.11
+#' # Median           0.18           0.08                   0.03            0.16                 0.12                         0.13
+#' # Mean             0.18           0.08                   0.04            0.15                 0.22                         0.18
+#' # 3rd Qu.          0.21           0.09                   0.04            0.18                 0.38                         0.29
+#' # Max.             0.32           0.14                   0.08            0.19                 0.49                         0.35
+#' 
+#' ##### Average relative estimates for the Herring_NASSHS shifted by +30 days in the normal and reversed direction:
+#' mean(dd$TSB_mean[dd$Survey == "Herring_NASSHS" & dd$Direction == "Normal" & dd$Timing == "30days"])
+#' mean(dd$TSB_mean[dd$Survey == "Herring_NASSHS" & dd$Direction == "Reversed" & dd$Timing == "30days"])
+#' 
+#' ##### The range of the relative estimates for Herring_NASSHS_fishery versus the other herring surveys:
+#' # Herring_NASSHS:
+#' valid <- dd$Survey == "Herring_NASSHS"
+#' range_Herring_NASSHS <- range(dd$TSB_mean[valid])
+#' range_Herring_NASSHS
+#' diff(range_Herring_NASSHS) / mean(range_Herring_NASSHS)
+#' 
+#' # Herring_NASSHS_fishery:
+#' valid <- dd$Survey == "Herring_NASSHS_fishery" & dd$Timing != "-30days"
+#' range_Herring_NASSHS_fishery <- range(dd$TSB_mean[valid])
+#' range_Herring_NASSHS_fishery
+#' diff(range_Herring_NASSHS_fishery) / mean(range_Herring_NASSHS_fishery)
+#' }
 runAllPelfossPaper1 <- function(
 	type="Parallel", run=type, survey="Herring_IESNS", dir="~/Projects/PELFOSS/delphi", # Paths and names
 	speedFact=1, condPar=NULL, LcmMean=NULL, 
