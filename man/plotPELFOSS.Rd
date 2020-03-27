@@ -4,34 +4,69 @@
 \alias{plotPelfoss}
 \alias{getTSB}
 \alias{getAllTSB}
+\alias{plotPelfossAll}
 \title{Plot the output from biomass2tsb() or runPelfoss().}
 \usage{
-plotPelfoss(x, ncolour = 20, col = list(h = c(0.6, 0.98), s = c(0.35, 1), v
-  = c(0.9, 0.3)), logColscale = TRUE, firstcol = NA, NASCthr = 0.001,
-  NASCexp = 2, NASCmax_size = 2, biomAlpha = 0.1, biomShape = 20,
-  biomSize = 2, biomThr = 1, trawlSize = 2, stratumcol = NULL,
-  plot = c("biom", "nasc", "trawl"), ...)
+plotPelfoss(
+  x,
+  biomassthr = 1,
+  NASCthr = 0.001,
+  NASCexp = 2,
+  NASCmax_size = 2,
+  biomCol = "blue",
+  biomAlpha = 0.1,
+  biomShape = 20,
+  biomSize = 2,
+  biomThr = 1,
+  trawlSize = 2,
+  stratumcol = NULL,
+  plot = c("biom", "nasc", "trawl", "super"),
+  daysOfSurvey = NULL,
+  timerange = NULL,
+  show = TRUE,
+  ...
+)
 
 getTSB(x, unit = "mt", digits = 4)
 
-getAllTSB(dir, outfile = NULL)
+getAllTSB(dir, run = "Run1", outfile = NULL, copy = TRUE)
+
+plotPelfossAll(
+  dir,
+  run = "Run1",
+  NASCthr = 0.001,
+  NASCexp = 2,
+  NASCmax_size = 2,
+  biomassthr = 1,
+  biomCol = "blue",
+  biomAlpha = 0.1,
+  biomShape = 20,
+  biomSize = 2,
+  biomThr = 1,
+  trawlSize = 2,
+  stratumcol = NULL,
+  plot = c("biom", "nasc", "trawl", "super"),
+  daysOfSurvey = NULL,
+  timerange = NULL,
+  format = "png",
+  show = TRUE,
+  ...
+)
 }
 \arguments{
-\item{x}{The output from \code{\link{biomass2tsb}} or \code{\link{runPelfoss}}.}
-
-\item{ncolour}{The number of colours used to plot the biomass field in layers.}
-
-\item{col}{A list of hue, saturation and value ranges, between which a sequence of 'ncolour' is used for the biomass layers, or a color vector such as gray(ncolour, 0.2, 0.8).}
-
-\item{logColscale}{Logical: If TRUE, use 10 * log10 for the plotted biomass layers.}
-
-\item{firstcol}{The color to use for the first biomass level (the default, NA, omits plotting the first layer, which may include 0-values).}
+\item{x}{The output from \code{\link{biomass2tsb}} (containing object named report, totalBiomass, superind, transects, biomass).}
 
 \item{NASCthr}{A value below which NASC values are omitted when plotted as black dots with size proportional to NASC^NASCexp.}
 
 \item{NASCmax_size}{Maximum size of the NASC dots.}
 
+\item{biomCol}{The color of the biomass field.}
+
 \item{trawlSize}{The size to use for the red asteriks representing trawl stations.}
+
+\item{logColscale}{Logical: If TRUE, use 10 * log10 for the plotted biomass layers.}
+
+\item{firstcol}{The color to use for the first biomass level (the default, NA, omits plotting the first layer, which may include 0-values).}
 
 \item{biomassAlpha}{Transparency of the biomass layers.}
 }

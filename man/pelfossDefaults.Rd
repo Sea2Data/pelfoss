@@ -2,22 +2,49 @@
 % Please edit documentation in R/pelfoss.R
 \name{pelfossDefaults}
 \alias{pelfossDefaults}
+\alias{getPelfossSkeleton}
 \alias{getPelfossPaths}
 \alias{createPelfossSkeleton}
-\alias{fitStandardAllometric}
+\alias{fitLengthWeightSuperind}
+\alias{fitLengthWeight}
+\alias{plotLengthWeight}
 \title{Utility functions of the pelfoss package.}
 \usage{
 pelfossDefaults()
 
-getPelfossPaths(dir, survey = "Herring_IESNS", year = 2010, res = 4,
-  reversed = FALSE, dateshift = 0, seed = 0)
+getPelfossSkeleton(dir, run = "Run1")
 
-createPelfossSkeleton(dir)
+getPelfossPaths(
+  dirs,
+  run = "Run1",
+  survey = "Herring_IESNS",
+  year = 2010,
+  res = 4,
+  reversed = FALSE,
+  dateshift = 0,
+  seed = 0
+)
 
-fitStandardAllometric(day, superind, superindFilter = NULL, b = NULL)
+createPelfossSkeleton(dir, run = "Run1")
+
+fitLengthWeightSuperind(
+  superindDay,
+  superind,
+  count = "inumb",
+  superindFilter = NULL,
+  stratumPolygons = NULL,
+  a = NULL,
+  b = NULL,
+  transectsXyOfDay = NULL,
+  insideRange = NULL
+)
+
+fitLengthWeight(L, W = NULL, a = NULL, b = NULL, count = NULL, filter = NULL)
+
+plotLengthWeight(x, cols = c(1, 2), useJitter = FALSE, ...)
 }
 \arguments{
-\item{dir}{The root directory of the pelfoss folder structure.}
+\item{dirs}{A list of paths to directories as returned from \code{link{getPelfossSkeleton}}.}
 
 \item{survey}{The survey name.}
 
