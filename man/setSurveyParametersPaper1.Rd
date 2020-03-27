@@ -4,8 +4,12 @@
 \alias{setSurveyParametersPaper1}
 \title{Function for setting the parameters of each survey for paper 1 using the PELFOSS framework.}
 \usage{
-setSurveyParametersPaper1(run, dir, survey = "Herring_IESNS",
-  type = "RectEnclZZ")
+setSurveyParametersPaper1(
+  run,
+  dir,
+  survey = "Herring_IESNS",
+  type = "RectEnclZZ"
+)
 }
 \arguments{
 \item{run}{The name of the simulation run (which is three timings (-30, 0, +30 days), two directions (normal, reversed), and two resolutions (low, high), in total 12 individual runs).}

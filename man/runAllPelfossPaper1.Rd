@@ -4,21 +4,34 @@
 \alias{runAllPelfossPaper1}
 \title{Funciton for running all specified surveys of paper 1 of the PELFOSS project.}
 \usage{
-runAllPelfossPaper1(type = "Parallel", run = type,
-  survey = "Herring_IESNS", dir = "~/Projects/PELFOSS/delphi",
-  speedFact = 1, condPar = NULL, LcmMean = NULL, year = c(2010,
-  2012), res = c(4, 10), dateshift = c(-30, 0, 30),
-  reversed = c(FALSE, TRUE), seed = 1, nboot = 100, radius = 10,
-  subset = "all", cores = 1, ...)
+runAllPelfossPaper1(
+  dir,
+  type = "Parallel",
+  run = type,
+  survey = "Herring_IESNS",
+  speedFact = 1,
+  condPar = NULL,
+  LcmMean = NULL,
+  year = c(2010, 2012),
+  res = c(4, 10),
+  dateshift = c(-30, 0, 30),
+  reversed = c(FALSE, TRUE),
+  seed = 1,
+  nboot = 100,
+  radius = 10,
+  subset = "all",
+  cores = 1,
+  ...
+)
 }
 \arguments{
+\item{dir}{The directory of the PELFOSS folder structure (see \code{\link{getPelfossSkeleton}}).}
+
 \item{type}{The survey design type (see \code{\link[Rstox]{surveyPlanner}}).}
 
 \item{run}{The name of the simulation run (which is three timings (-30, 0, +30 days), two directions (normal, reversed), and two resolutions (low, high), in total 12 individual runs).}
 
 \item{survey}{The name(s) of the survey(s) to run. Must be one or more of "Herring_IESNS", "Herring_NASSHS", "Herring_NASSHS_fishery", "Mackerel_IESSNS", "Mackerel_IESSNS_sept" and "Mackerel_IESSNS_sept_fishery", which are the surveys used in the Paper 1 of the PELFOSS project.}
-
-\item{dir}{The directory of the PELFOSS folder structure (see \code{\link{getPelfossSkeleton}}).}
 
 \item{speedFact}{A factor to speed the survey up or down by. Values larger than 1 speed up and values smaller than 1 slow down.}
 
@@ -82,7 +95,7 @@ survey = c(
 runs <- c(
 	"Parallel", 
 	"Parallel_Fixed_abL", 
-	"Parallel_Fixed_abL_SpeedTimes50", 
+	"Parallel_Fixed_abL_SpeedTimes50"
 )
 # Run for seeds 1 and 2:
 seeds <- c(1, 2)
@@ -110,7 +123,7 @@ for(seed \%in\% seeds){
 for(seed \%in\% seeds){
 	Parallel_Fixed_abL <- runAllPelfossPaper1(
 		type=type, run=runs[2], survey=survey, dir=dir, # Paths and names
-		condPar=c(0.3, 2), LcmMean=30, 
+		condPar=c(0.01, 3), LcmMean=30, 
 		year=year, res=res, dateshift=dateshift, reversed=reversed, # spec
 		seed=seed, nboot=nboot, radius=radius, subset="all", cores=cores
 	)
@@ -124,7 +137,7 @@ for(seed \%in\% seeds){
 for(seed \%in\% seeds){
 	Parallel_Fixed_abL <- runAllPelfossPaper1(
 		type=type, run=runs[3], survey=survey, dir=dir, # Paths and names
-		speedFact=50, condPar=c(0.3, 2), LcmMean=30, 
+		speedFact=50, condPar=c(0.01, 3), LcmMean=30, 
 		year=year, res=res, dateshift=dateshift, reversed=reversed, # spec
 		seed=seed, nboot=nboot, radius=radius, subset="all", cores=cores
 	)
@@ -147,11 +160,11 @@ headPar
 ##### Plots #####
 #################
 #  Plots with ylim up ro 2.15:
-temp <- lapply(runs, plotAllPelfossReports, dir=dir, by="InsideAll", ylim=c(0, 2.15), save="allPlots_max2.15_cv_allSeeds", case_adj=c(0.5, 0.95), add.cv=TRUE)
+temp <- lapply(runs, plotPelfossReports, dir = dir, by = "InsideAll", ylim = c(0, 2.15), subdir = "allPlots_max2.15_cv_allSeeds", case_adj = c(0.5, 0.95), add.cv = TRUE)
 
 # Read the reports back in from the experiment referred to in the PELFOSS Paper 1:
 run <- runs[2]
-r <- readAllPelfossReports(run, dir=dir)
+r <- readPelfossReports(run, dir=dir)
 
 # Write a table for use in supplementary materials:
 columnsToKeep <- c(
@@ -181,8 +194,8 @@ newNames <- c(
 rsmall <- r[columnsToKeep]
 names(rsmall) <- newNames
 head(rsmall)
-outfile <- file.path(dir, "runs", run, "reports", "allReportsSmall.txt")
-write.table(rsmall, file=outfile, sep="\\t", dec=".", row.names=FALSE, fileEncoding="UTF-8")
+outfile <- file.path(dir, "runs", run, "reports", "AllSurveysReportsSmall.txt")
+write.table(rsmall, file=outfile, sep="\t", dec=".", row.names=FALSE, fileEncoding="UTF-8")
 
 #######################
 ##### Diagnostics #####

@@ -6,15 +6,28 @@
 \alias{getTotalBiomass}
 \title{Extract dayly subsets of biomass and superind.}
 \usage{
-getSuperindOfDay(superind, superindDay = NULL, superindFilter = NULL,
-  stratumPolygons = NULL, transectsXyOfDay = NULL,
-  insideRange = NULL)
+getSuperindOfDay(
+  superind,
+  superindDay = NULL,
+  superindFilter = NULL,
+  stratumPolygons = NULL,
+  transectsXyOfDay = NULL,
+  insideRange = NULL
+)
 
 getBiomassOfSurvey(x, daysOfSurvey = NULL, fresh = FALSE)
 
-getTotalBiomass(superind, stratumPolygons, strataInd = NULL,
-  days = NULL, type = c("biomass", "length"), superindFilter = NULL,
-  union = FALSE, transectsXyOfDay = NULL, insideRange = NULL)
+getTotalBiomass(
+  superind,
+  stratumPolygons,
+  strataInd = NULL,
+  days = NULL,
+  type = c("biomass", "length"),
+  superindFilter = NULL,
+  union = FALSE,
+  transectsXyOfDay = NULL,
+  insideRange = NULL
+)
 }
 \arguments{
 \item{superindFilter}{A function such as superindFilter <- function(x){x$Long < 20 & x$Lat < 70}, taking the superind data as input and returning a logical vector discarding certain longitude/latitude combinations.}

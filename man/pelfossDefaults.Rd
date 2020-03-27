@@ -14,18 +14,32 @@ pelfossDefaults()
 
 getPelfossSkeleton(dir, run = "Run1")
 
-getPelfossPaths(dirs, run = "Run1", survey = "Herring_IESNS",
-  year = 2010, res = 4, reversed = FALSE, dateshift = 0,
-  seed = 0)
+getPelfossPaths(
+  dirs,
+  run = "Run1",
+  survey = "Herring_IESNS",
+  year = 2010,
+  res = 4,
+  reversed = FALSE,
+  dateshift = 0,
+  seed = 0
+)
 
 createPelfossSkeleton(dir, run = "Run1")
 
-fitLengthWeightSuperind(superindDay, superind, count = "inumb",
-  superindFilter = NULL, stratumPolygons = NULL, a = NULL,
-  b = NULL, transectsXyOfDay = NULL, insideRange = NULL)
+fitLengthWeightSuperind(
+  superindDay,
+  superind,
+  count = "inumb",
+  superindFilter = NULL,
+  stratumPolygons = NULL,
+  a = NULL,
+  b = NULL,
+  transectsXyOfDay = NULL,
+  insideRange = NULL
+)
 
-fitLengthWeight(L, W = NULL, a = NULL, b = NULL, count = NULL,
-  filter = NULL)
+fitLengthWeight(L, W = NULL, a = NULL, b = NULL, count = NULL, filter = NULL)
 
 plotLengthWeight(x, cols = c(1, 2), useJitter = FALSE, ...)
 }

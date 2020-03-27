@@ -5,24 +5,22 @@
 \alias{drawTrawlStationInd}
 \title{Simulate trawl stations from superindividuals.}
 \usage{
-simulateTrawl(superind, fishStation, seed = 0, radius = 10,
-  nn = NULL, N = 100, lengthunit = 2, superindFilter = NULL,
-  LcmMean = NULL)
+simulateTrawl(
+  superind,
+  fishStation,
+  seed = 0,
+  radius = 10,
+  nn = NULL,
+  N = 100,
+  lengthunit = 2,
+  superindFilter = NULL,
+  LcmMean = NULL
+)
 
 drawTrawlStationInd(NASC, nstations = 1, seed = 0, probfact = 0)
 }
 \arguments{
 \item{superind}{The superind data read from \code{readNcVarsAndAttrs} (used in \code{readNorwecomBiomass} and \code{readNorwecomSuperind}).}
-
-\item{x}{The input NetCDF4 file.}
-
-\item{x}{The input NetCDF4 file.}
-
-\item{x}{The input NetCDF4 file.}
-
-\item{x}{The input NetCDF4 file.}
-
-\item{x}{The input NetCDF4 file.}
 
 \item{x}{The input NetCDF4 file.}
 }

@@ -4,11 +4,23 @@
 \alias{runPelfoss}
 \title{Run the PELFOSS framework.}
 \usage{
-runPelfoss(dir, run = "Run1", biomass = NULL, superind = NULL,
-  surveyPar = list(), year = 2010, res = 4, dateshift = 0,
-  reversed = FALSE, seed = 0, projectName = "PelfossProjectRstox",
-  nboot = 10, xsd = list(acoustic = "1", biotic = "1.4"),
-  format = "png", ...)
+runPelfoss(
+  dir,
+  run = "Run1",
+  biomass = NULL,
+  superind = NULL,
+  surveyPar = list(),
+  year = 2010,
+  res = 4,
+  dateshift = 0,
+  reversed = FALSE,
+  seed = 0,
+  projectName = "PELFOSS_Project_StoX",
+  nboot = 10,
+  xsd = list(acoustic = "1", biotic = "1.4"),
+  format = "png",
+  ...
+)
 }
 \arguments{
 \item{dir}{The directory holding the NORWECOM files, the stratum files and the output xml files from the function (temporary stored for insertion into the StoX project).}

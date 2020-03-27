@@ -5,16 +5,43 @@
 \alias{biomass2nasc}
 \title{Simulate survey based on NORWECOM data.}
 \usage{
-biomass2tsb(projectName, xmlOutputDir, biomass, superind, stratum,
-  startdate = "31/1", dateshift = 0, centroid = c(0, 68), seed = 0,
-  nboot = 10, xsd = list(acoustic = "1", biotic = "1.4"),
-  nTrawl = 50, hours = list(240), type = "RectEnclZZ", knots = 10,
-  equalEffort = FALSE, bearing = "along", distsep = 1,
-  margin = 0.1, tsn = 161722, m = 20, TS0 = -71.9,
-  condPar = NULL, LcmMean = NULL, platform = 4174, distance = 5,
-  sweepWidth = 25, probfact = 1, radius = 10, N = 100,
-  cores = list(biotic = 1, acoustic = 1, bootstrap = 1), unit = "mt",
-  superindFilter = NULL, stagesToRemove = c(0, 1, 2), ...)
+biomass2tsb(
+  projectName,
+  xmlOutputDir,
+  biomass,
+  superind,
+  stratumFile,
+  startdate = "31/1",
+  dateshift = 0,
+  centroid = c(0, 68),
+  seed = 0,
+  nboot = 10,
+  xsd = list(acoustic = "1", biotic = "1.4"),
+  nTrawl = 50,
+  hours = list(240),
+  type = "RectEnclZZ",
+  knots = 10,
+  equalEffort = FALSE,
+  bearing = "along",
+  distsep = 1,
+  margin = 0.1,
+  tsn = 161722,
+  m = 20,
+  TS0 = -71.9,
+  condPar = NULL,
+  LcmMean = NULL,
+  platform = 4174,
+  distance = 5,
+  sweepWidth = 25,
+  probfact = 1,
+  radius = 10,
+  N = 100,
+  cores = list(biotic = 1, acoustic = 1, bootstrap = 1),
+  unit = "mt",
+  superindFilter = NULL,
+  stagesToRemove = c(0, 1, 2),
+  ...
+)
 
 biomass2nasc(Wg, LcmOne, a, b, m = 20, TS0 = -71.9)
 }
@@ -27,7 +54,7 @@ biomass2nasc(Wg, LcmOne, a, b, m = 20, TS0 = -71.9)
 
 \item{superind}{The path to a NORWECOM NetCDF4 file with superindividuals. The file should contain the variables "age", "inumb", "length", "weight", "longitude" and "latitude".}
 
-\item{stratum}{The path to a file with the stratum polygons given as a two column matrix with stratum name in the first column and a MULTIPOLYGON wkt string in the second conlumn.}
+\item{stratumFile}{The path to a file with the stratum polygons given as a two column matrix with stratum name in the first column and a MULTIPOLYGON wkt string in the second conlumn.}
 
 \item{startdate}{The start date of the survey, given as "\%d/\%m", e.g., 31 January is "31/1".}
 

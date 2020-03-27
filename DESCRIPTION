@@ -10,9 +10,11 @@ Description: The package pelfoss contains code to simulate acoustic-trawl survey
 BugReports: https://github.com/Sea2Data/pelfoss/issues
 License: LGPL-3
 LazyData: true
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
 Imports:
+		data.table,
 		fields,
+		ggnewscale,
 		ggplot2,
 		interp,
 		maptools,

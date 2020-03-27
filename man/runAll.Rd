@@ -4,8 +4,17 @@
 \alias{runAll}
 \title{Function for running all combinations of parameters of a survey stored in the spec, which is a data frame with one row per run.}
 \usage{
-runAll(spec, run, dir, surveyPar, seed = 1, nboot = 100, radius = 10,
-  subset = "all", ...)
+runAll(
+  spec,
+  run,
+  dir,
+  surveyPar,
+  seed = 1,
+  nboot = 100,
+  radius = 10,
+  subset = "all",
+  ...
+)
 }
 \arguments{
 \item{spec}{A data frame of the specifications of res and year (these are linked in the current PELFOSS framework), dateshift and reversed.}

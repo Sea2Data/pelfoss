@@ -23,13 +23,14 @@
 #' @importFrom grDevices dev.off
 #' @rdname runPelfoss
 #' 
-runPelfoss <- function(dir, run="Run1", biomass=NULL, superind=NULL, surveyPar=list(), year=2010, res=4, dateshift=0, reversed=FALSE, seed=0, projectName="PelfossProjectRstox", nboot=10, xsd=list(acoustic="1", biotic="1.4"), format="png", ...){
-
-	dirs <- getPelfossSkeleton(dir, run=run)
-	createPelfossSkeleton(dir, run=run)
+runPelfoss <- function(dir, run = "Run1", biomass = NULL, superind = NULL, surveyPar = list(), year = 2010, res = 4, dateshift = 0, reversed = FALSE, seed = 0, projectName = "PELFOSS_Project_StoX", nboot = 10, xsd = list(acoustic = "1", biotic = "1.4"), format = "png", ...){
+	
+	# Get directories and create the directory skeleton:
+	dirs <- getPelfossSkeleton(dir, run = run)$dirs
+	createPelfossSkeleton(dir, run = run)
 
 	# Define a list of inputs to the biomass2tsb() function;
-	input <- list(dir=dir, xmlOutputDir=dirs$XMLfilesdir, year=year, res=res, dateshift=dateshift, reversed=reversed, seed=seed, projectName=projectName, nboot=nboot, xsd=xsd, format=format)
+	input <- list(dir = dir, xmlOutputDir = dirs$XMLfilesdir, year = year, res = res, dateshift = dateshift, reversed = reversed, seed = seed, projectName = projectName, nboot = nboot, xsd = xsd, format = format)
 
 	# Parameters not listed explicitely in the function arguments, but which can be changed through "...":
 	defaults <- pelfossDefaults()
@@ -37,10 +38,8 @@ runPelfoss <- function(dir, run="Run1", biomass=NULL, superind=NULL, surveyPar=l
 	lll <- list(...)
 	common <- intersect(names(defaults), names(lll))
 	defaults[common] <- lll[common]
-
-	files <- getPelfossPaths(dirs=dirs, survey=surveyPar$survey, year=year, res=res, reversed=reversed, dateshift=dateshift, seed=seed)
-
-	#surveyPar <- setSurveyParameters(survey=survey, reversed=reversed)
+	
+	files <- getPelfossPaths(dirs = dirs, survey = surveyPar$survey, year = year, res = res, reversed = reversed, dateshift = dateshift, seed = seed)
 
 	# Reverse the survey by reversing the stratum order and orientations:
 	if(reversed){
@@ -76,20 +75,20 @@ runPelfoss <- function(dir, run="Run1", biomass=NULL, superind=NULL, surveyPar=l
 	# Save the output from biomass2tsb (except from "superind" and "biomass" but adding "biomassOfSurvey" and "superindOfSurvey") to the output folder of the project:
 	x <- getBiomassOfSurvey(x)
 	#x <- getSuperindOfSurvey(x)
-	x$files <- c(files, list(year=year, res=res, reversed=reversed, dateshift=dateshift, seed=seed))
+	x$files <- c(files, list(year = year, res = res, reversed = reversed, dateshift = dateshift, seed = seed))
 	#biomass2tsb.out <- x[!names(x) %in% c("superind", "biomass")]
 	#biomass2tsb.outfile <- file.path(paths$RReportDir, "biomass2tsb.RData")
 	#save("biomass2tsb.out", file=biomass2tsb.outfile)
 	pelfossOutput <- x[!names(x) %in% c("superind", "biomass")]
 	pelfossOutput.file <- file.path(paths$RReportDir, "pelfossOutput.RData")
-	save("pelfossOutput", file=pelfossOutput.file)
+	save("pelfossOutput", file = pelfossOutput.file)
 	
 	# Save the plot to the output folder of the project:
 	# Run the plot:
 	p <- plotPelfoss(x)
 	# Get the file names:
 	filenamebase <- file.path(paths$RReportDir, c("pelfossOutput", "surveyPlanner"))
-	filename <- paste(filenamebase, format, sep=".")
+	filename <- paste(filenamebase, format, sep = ".")
 
 	lll <- list(...)
 	if(!all(c("width", "height") %in% names(lll))){
@@ -101,7 +100,7 @@ runPelfoss <- function(dir, run="Run1", biomass=NULL, superind=NULL, surveyPar=l
 	# Run the ggplots returned by plotPelfoss:
 	for(i in seq_along(p)){
 		if(length(format)){
-			do.call(format, c(list(filename=filename[i]), Rstox::applyParlist(lll, format)))
+			do.call(format, c(list(filename = filename[i]), Rstox::applyParlist(lll, format)))
 			#moveToTrash(filename)
 		}
 		print(p[[i]])
@@ -112,12 +111,17 @@ runPelfoss <- function(dir, run="Run1", biomass=NULL, superind=NULL, surveyPar=l
 
 	# Copy the project to the PELFOSS directory:
 	if(!file.exists(files$projectPath)){
-		dir.create(files$projectPath, recursive=TRUE)
+		dir.create(files$projectPath, recursive = TRUE)
 	}
 	
-	cat("Copying project ", paths$projectPath, " to ", files$projectPath, ".\n", sep="")
-	file.copy(paths$projectPath, dirname(files$projectPath), recursive=TRUE)
-
+	# Move the StoX project from the temporary (convenient) location to the survey folder:
+	cat("Copying project \n\t", paths$projectPath, " to\n\t", files$projectPath, ".\n", sep = "")
+	dir.create(files$projectPath)
+	foldersToCopy <- list.dirs(paths$projectPath, full.names = TRUE, recursive = FALSE)
+	lapply(foldersToCopy, file.copy, files$projectPath, recursive = TRUE)
+	#file.copy(paths$projectPath, dirname(files$projectPath), recursive=TRUE)
+	unlink(paths$projectPath, force=TRUE, recursive=TRUE)
+	
 	list(files$projectPath)
 }
 
@@ -152,7 +156,7 @@ runPelfoss <- function(dir, run="Run1", biomass=NULL, superind=NULL, surveyPar=l
 #' @rdname readBiomass
 #' @export
 #' 
-readNcVarsAndAttrs <- function(ncfile, vars, rename=NULL){
+readNcVarsAndAttrs <- function(ncfile, vars, rename = NULL){
 	getNcVarAndAttr <- function(y, nc){
 		out <- ncvar_get(nc, y)
 		att <- ncatt_get(nc, y)$long_name
@@ -161,7 +165,7 @@ readNcVarsAndAttrs <- function(ncfile, vars, rename=NULL){
 	}
 	# Read the NORWECOM superindividual file:
 	nc <- nc_open(ncfile)
-	data <- lapply(vars, getNcVarAndAttr, nc=nc)
+	data <- lapply(vars, getNcVarAndAttr, nc = nc)
 	
 	if(length(rename)){
 		rename <- rename[intersect(names(rename), vars)]
@@ -173,7 +177,7 @@ readNcVarsAndAttrs <- function(ncfile, vars, rename=NULL){
 	
 	names(data) <- vars
 	
-	list(nc=nc, data=data)
+	list(nc = nc, data = data)
 }
 #' 
 #' @rdname readBiomass
@@ -182,19 +186,19 @@ readNcVarsAndAttrs <- function(ncfile, vars, rename=NULL){
 readNorwecomBiomass <- function(
 	ncfile, centroid, 
 	vars = c("Biom", "Long", "Latt"), 
-	rename = list(Biom="biomass", Long="longitude", Latt="latitude")
+	rename = list(Biom = "biomass", Long = "longitude", Latt = "latitude")
 	){
 	
 	# Read the NORWECOM superindividual file:
-	out <- readNcVarsAndAttrs(ncfile, vars=vars, rename=rename)
+	out <- readNcVarsAndAttrs(ncfile, vars = vars, rename = rename)
 	# Add time, using the dimension information in the NetCDF4-file:
-	out <- addTimeFromHoursSince1950(out, timedim="T")
+	out <- addTimeFromHoursSince1950(out, timedim = "T")
 	
 	# Use only the data object, and discard the nc object:
 	out <- out$data
 	
 	# Get Cartesian coordinates:
-	out <- projLonLat2XY(out, centroid=centroid)
+	out <- projLonLat2XY(out, centroid = centroid)
 	
 	return(out)
 }
@@ -205,7 +209,7 @@ readNorwecomBiomass <- function(
 readNorwecomSuperind <- function(
 	ncfile, centroid, 
 	vars = c("xpos", "ypos", "Long", "Latt", "female", "age", "length", "pweight", "inumb", "site", "stage"), 
-	rename = list(pweight="weight"), 
+	rename = list(pweight = "weight"), 
 	#rename = list(xpos="gridLongInd", ypos="gridLattInd", Long="gridLong", Latt="gridLatt"), 
 	na.rm = TRUE, 
 	maxValue = 1e10, 
@@ -244,7 +248,7 @@ readNorwecomSuperind <- function(
 		return(superind)
 	}
 	# Funciton for removing super individuals with intital NA at the first available variable:
-	removeStages <- function(superind, stagesToRemove=c(0, 1, 2)){
+	removeStages <- function(superind, stagesToRemove = c(0, 1, 2)){
 		# Get the indices of variables with days at the second dimension:
 		withDays <- getVarsWithDays(superind)
 		
@@ -256,25 +260,25 @@ readNorwecomSuperind <- function(
 	
 	
 	# Read the NORWECOM superindividual file:
-	out <- readNcVarsAndAttrs(ncfile, vars=vars, rename=rename)
+	out <- readNcVarsAndAttrs(ncfile, vars = vars, rename = rename)
 	# Add time, using the dimension information in the NetCDF4-file:
-	out <- addTimeFromHoursSince1950(out, timedim="time")
+	out <- addTimeFromHoursSince1950(out, timedim = "time")
 	
 	# Use only the data object, and discard the nc object:
 	out <- out$data
 	
 	# Convert too large values to NA (as intended):
-	out <- lapply(out, setLargeToNA, maxValue=maxValue)
+	out <- lapply(out, setLargeToNA, maxValue = maxValue)
 	
 	##### Filters: #####
 	# Remove all superindividuals which are not valid at the start of the year (i.e., discard eggs and larva, which may have different definitions of age and other variables than the juveniles and adults):
 	if(na.rm){
-		out <- removeIntitialNA(out, maxValue=maxValue)
+		out <- removeIntitialNA(out, maxValue = maxValue)
 	}
 	
 	# Remove eggs, larvae and juveniles:
 	if(length(stagesToRemove)){
-		out <- removeStages(out, stagesToRemove=stagesToRemove)
+		out <- removeStages(out, stagesToRemove = stagesToRemove)
 	}
 	
 	
@@ -287,7 +291,7 @@ readNorwecomSuperind <- function(
 	out <- getNorwecomSuperindLonLat(out)
 	
 	# Get Cartesian coordinates:
-	out <- projLonLat2XY(out, centroid=centroid)
+	out <- projLonLat2XY(out, centroid = centroid)
 	
 	# Return:
 	out
@@ -305,8 +309,8 @@ getNorwecomSuperindLonLat <- function(superind){
 	seqx <- seq_len(dimxy[1])
 	seqy <- seq_len(dimxy[2])
 	# Define two lists of data, where x and y are the sequences of indices defined above in both lists, and the z is the actual longitude and latitude values respectively of the irregular grid:
-	dataLon <- list(x=seqx, y=seqy, z=superind$Long)
-	dataLat <- list(x=seqx, y=seqy, z=superind$Latt)
+	dataLon <- list(x = seqx, y = seqy, z = superind$Long)
+	dataLat <- list(x = seqx, y = seqy, z = superind$Latt)
 
 	# Define the matrix of points given as partial indices in the irregular grid:
 	superindpos <- cbind(c(superind$xpos), c(superind$ypos))
@@ -333,10 +337,10 @@ getNorwecomSuperindLonLat <- function(superind){
 #' @rdname readBiomass
 #' @export
 #' 
-projLonLat2XY <- function(x, centroid, proj="aeqd", units="kmi", x_0=0, y_0=0, ellps="WGS84", datum="WGS84"){
+projLonLat2XY <- function(x, centroid, proj = "aeqd", units = "kmi", x_0 = 0, y_0 = 0, ellps = "WGS84", datum = "WGS84"){
 	# Convert the locations to x,y using the 'aeqd' projection and centered at 0, 68:
-	thisLonLat <- data.frame(lon=c(x$lon), lat=c(x$lat))
-	xy_new <- Rstox::geo2xy(thisLonLat, list(proj=proj, units=units, lon_0=centroid[1], lat_0=centroid[2], x_0=x_0, y_0=y_0, ellps=ellps, datum=datum), data.frame.out=TRUE)
+	thisLonLat <- data.frame(lon = c(x$lon), lat = c(x$lat))
+	xy_new <- Rstox::geo2xy(thisLonLat, list(proj = proj, units = units, lon_0 = centroid[1], lat_0 = centroid[2], x_0 = x_0, y_0 = y_0, ellps = ellps, datum = datum), data.frame.out = TRUE)
 
 	# Define the grid to interpolate onto:
 	x$x <- xy_new$x
@@ -351,16 +355,16 @@ projLonLat2XY <- function(x, centroid, proj="aeqd", units="kmi", x_0=0, y_0=0, e
 #' @rdname readBiomass
 #' @export
 #' 
-interpolateBiomassToTransects <- function(biomass, superind, transects, centroid, logDays, lonlatmargin=0.05, superindFilter=NULL, m=20, TS0=-71.9, insideRange=NULL, condPar=NULL, LcmMean=NULL){
+interpolateBiomassToTransects <- function(biomass, superind, transects, centroid, logDays, lonlatmargin = 0.05, superindFilter = NULL, m = 20, TS0 = -71.9, insideRange = NULL, condPar = NULL, LcmMean = NULL){
 	# Function to add margin to the ranges from which the points in the original locations are selected:
-	addMargin <- function(x, lonlatmargin=0.05){
+	addMargin <- function(x, lonlatmargin = 0.05){
 		rangex <- range(x)
 		rangex <- rangex + c(-1, 1) * lonlatmargin[1] * diff(rangex)
 		rangex
 	}
 	
 	# Function for interpolating the biomass values onto the log distances for one specific day 'superindDay', which is looked for in the vector 'logDays', which is the days for each log distance:
-	interpolateOneDayOld <- function(superindDay, biomass, superind, transects, logDays, lonlatmargin, stratumMatrix, superindFilter=NULL, m=20, TS0=-71.9, thr=10, union=FALSE, insideRange=NULL){
+	interpolateOneDayOld <- function(superindDay, biomass, superind, transects, logDays, lonlatmargin, stratumMatrix, superindFilter = NULL, m = 20, TS0 = -71.9, thr = 10, union = FALSE, insideRange = NULL){
 		
 		# Get the locations of the requested day, and convert NA to 0:
 		z <- c(biomass$biomass[,,superindDay])
@@ -395,24 +399,24 @@ interpolateBiomassToTransects <- function(biomass, superind, transects, centroid
 		x <- c(biomass$x)[valid]
 		y <- c(biomass$y)[valid]
 		z <- z[valid]
-		zo <- interp::interp(x=x, y=y, z=z, xo=xo, yo=yo, output="points")
+		zo <- interp::interp(x = x, y = y, z = z, xo = xo, yo = yo, output = "points")
 		
 		##### Add the NASC, by first fitting the fish length-weight relationship to the superindividual data, and then using this to convert from biomass to NASC: #####
 		#  Get first the parameters a and b in the length-weight relationship:
 		transectsXyOfDay <- cbind(xo, yo)
 		if(length(condPar) == 0){
 			#condPar <- fitLengthWeightSuperind(superindDay, superind, superindFilter=superindFilter, b=NULL, transectsXyOfDay=transectsXyOfDay, insideRange=insideRange)$fit
-			condPar <- fitLengthWeightSuperind(superindDay, superind, superindFilter=superindFilter, stratumPolygons=stratumMatrix, b=NULL, transectsXyOfDay=transectsXyOfDay, insideRange=insideRange)$fit
+			condPar <- fitLengthWeightSuperind(superindDay, superind, superindFilter = superindFilter, stratumPolygons = stratumMatrix, b = NULL, transectsXyOfDay = transectsXyOfDay, insideRange = insideRange)$fit
 		}
 		
 		# Get the mean of the square length weighted by the number of indivudyals per superindividual:
-		temp <- getTotalBiomass(superind=superind, stratumPolygons=stratumMatrix, days=superindDay, type="length", union=union, transectsXyOfDay=transectsXyOfDay, insideRange=insideRange)
 		if(length(LcmMean) == 0){
+			temp <- getTotalBiomass(superind = superind, stratumPolygons = stratumMatrix, days = superindDay, type = "length", union = union, transectsXyOfDay = transectsXyOfDay, insideRange = insideRange)
 			LcmMean <- temp$AllStrata
 		}
 		
 		# Convert to NASC
-		temp <- biomass2nasc(Wg=zo$z, LcmOne=LcmMean, a=condPar[1], b=condPar[2], m=m, TS0=TS0)
+		temp <- biomass2nasc(Wg = zo$z, LcmOne = LcmMean, a = condPar[1], b = condPar[2], m = m, TS0 = TS0)
 	
 		if(all(is.na(temp$NASC)) || !isTRUE(any(temp$NASC>0))){
 			warning("No biomass along the transects")
@@ -420,7 +424,7 @@ interpolateBiomassToTransects <- function(biomass, superind, transects, centroid
 		}
 		
 		# Combine to get a link to the day (suppress a warning with row names):
-		suppressWarnings(out <- data.frame(superindDay=superindDay, biomassG=zo$z, LcmMean=LcmMean, condParFactor=condPar[1], condParExponent=condPar[2]))
+		suppressWarnings(out <- data.frame(superindDay = superindDay, biomassG = zo$z, LcmMean = LcmMean, condParFactor = condPar[1], condParExponent = condPar[2]))
 		out <- cbind(out, temp)
 		return(out)
 	}
@@ -445,7 +449,7 @@ interpolateBiomassToTransects <- function(biomass, superind, transects, centroid
 	# Run through the days and interpolate the biomass onto the transect lines, and convert to NASC:
 	udays <- unique(logDays)
 	#bio <- do.call(rbind, lapply(udays, interpolateOneDayOld, biomass=biomass, superind=superind, transects=transects, logDays=logDays, lonlatmargin=lonlatmargin, stratumUnionMatrix=stratumUnionMatrix, superindFilter=superindFilter, m=m, TS0=TS0))
-	bio <- do.call(rbind, lapply(udays, interpolateOneDayOld, biomass=biomass, superind=superind, transects=transects, logDays=logDays, lonlatmargin=lonlatmargin, stratumMatrix=stratumMatrix, superindFilter=superindFilter, m=m, TS0=TS0, union=TRUE, insideRange=insideRange))
+	bio <- do.call(rbind, lapply(udays, interpolateOneDayOld, biomass = biomass, superind = superind, transects = transects, logDays = logDays, lonlatmargin = lonlatmargin, stratumMatrix = stratumMatrix, superindFilter = superindFilter, m = m, TS0 = TS0, union = TRUE, insideRange = insideRange))
 	
 	# Order by the days:
 	bio <- bio[order(bio$superindDay), ]
@@ -464,7 +468,7 @@ interpolateBiomassToTransects <- function(biomass, superind, transects, centroid
 
 
 # Small function for adding time which is given as hours from 1950 in the NORWECOM model:
-addTimeFromHoursSince1950 <- function(x, timedim="time"){
+addTimeFromHoursSince1950 <- function(x, timedim = "time"){
 	# Add time from the dimensions:
 	x$data$time <- as.POSIXct("1950-01-01", tz = "UTC") + x$nc$dim[[timedim]]$vals * 60^2
 	return(x)
@@ -483,7 +487,7 @@ addTimeFromHoursSince1950 <- function(x, timedim="time"){
 #' @param xmlOutputDir			The biomass area density in units of g/m^2 (gram per square meter in the horizontal plane). 
 #' @param biomass				The path to a NORWECOM NetCDF4 file with biomass in grams per square meter in a irregular geographical grid. The file should contain the variables "biomass", "longitude" and "latitude".
 #' @param superind				The path to a NORWECOM NetCDF4 file with superindividuals. The file should contain the variables "age", "inumb", "length", "weight", "longitude" and "latitude".
-#' @param stratum				The path to a file with the stratum polygons given as a two column matrix with stratum name in the first column and a MULTIPOLYGON wkt string in the second conlumn.
+#' @param stratumFile			The path to a file with the stratum polygons given as a two column matrix with stratum name in the first column and a MULTIPOLYGON wkt string in the second conlumn.
 #' @param startdate				The start date of the survey, given as "\%d/\%m", e.g., 31 January is "31/1".
 #' @param dateshift 			An integer number of days to shift the survey by, negative values shifting to earlier in the year.
 #' @param centroid				The centroid of the data, given in longitude, latitude.
@@ -520,12 +524,12 @@ biomass2tsb <- function(
 	# For the StoX project and writing XML files:
 	projectName, xmlOutputDir, 
 	# For the biomass and superindividuals and other global options:
-	biomass, superind, stratum, startdate = "31/1", dateshift = 0, centroid = c(0, 68), seed = 0, nboot=10, xsd = list(acoustic="1", biotic="1.4"),
+	biomass, superind, stratumFile, startdate = "31/1", dateshift = 0, centroid = c(0, 68), seed = 0, nboot=10, xsd = list(acoustic="1", biotic="1.4"),
 	# For transects and NASC:
 	nTrawl = 50, hours = list(240), type = "RectEnclZZ", knots = 10, equalEffort = FALSE, bearing = "along", distsep = 1, margin = 0.1, tsn = 161722, m = 20, TS0 = -71.9, condPar=NULL, LcmMean=NULL, 
 	# For trawl:
 	platform = 4174, distance = 5, sweepWidth = 25, probfact = 1, radius=10, 
-	N=100, cores=list(biotic=1, acoustic=1, bootstrap=1), unit="mt", superindFilter=NULL, stagesToRemove = c(0, 1, 2), 
+	N = 100, cores = list(biotic = 1, acoustic = 1, bootstrap = 1), unit = "mt", superindFilter = NULL, stagesToRemove = c(0, 1, 2), 
 	...){
 		
 	# Not used, calculate the pure transect time outside of the function, and do not consider the time used by trawling as a delay of the acoustic logging.
@@ -534,7 +538,7 @@ biomass2tsb <- function(
 	biomass2tsbInputs <- mget(setdiff(names(formals(biomass2tsb)), "..."))
 	
 	if(!is.list(seed) && length(seed) == 1){
-		seed <- list(transect=seed, trawl=seed, bootstrap=seed)
+		seed <- list(transect = seed, trawl = seed, bootstrap = seed)
 	}
 		
 	# Hard coded:
@@ -553,7 +557,7 @@ biomass2tsb <- function(
 	samplenumber = 1
 	
 	if(!is.list(cores)){
-		cores <- as.list(rep(cores, length.out=3))
+		cores <- as.list(rep(cores, length.out = 3))
 		names(cores) <- c("biotic", "acoustic", "bootstrap")
 	}
 	
@@ -589,12 +593,12 @@ biomass2tsb <- function(
 	# Read the biomass:
 	if(is.character(biomass) && file.exists(biomass)){
 		cat("Reading biomass file...\n")
-		biomass <- readNorwecomBiomass(biomass, centroid=centroid)
+		biomass <- readNorwecomBiomass(biomass, centroid = centroid)
 	}
 	# Read the superindividuals:
 	if(is.character(superind) && file.exists(superind)){
 		cat("Reading superind file...\n")
-		superind <- readNorwecomSuperind(superind, centroid=centroid, stagesToRemove=stagesToRemove)
+		superind <- readNorwecomSuperind(superind, centroid = centroid, stagesToRemove = stagesToRemove)
 	}
 	#########################################################
 	#########################################################
@@ -617,15 +621,15 @@ biomass2tsb <- function(
 	year = format(as.Date(biomass$time),"%Y")
 	year <- median(year)
 	# Add the year to the start date:
-	startdate <- paste(year, startdate, sep="/")
-	startdate <- as.Date(startdate, format="%Y/%d/%m")
-	t0 <- as.POSIXct(paste(startdate, "00:00:00"), format="%Y-%m-%d %H:%M:%S", tz="UTC")
+	startdate <- paste(year, startdate, sep = "/")
+	startdate <- as.Date(startdate, format = "%Y/%d/%m")
+	t0 <- as.POSIXct(paste(startdate, "00:00:00"), format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
 	# Add the dateshift:
 	t0 <- t0 + dateshift * 24 * 60 * 60
 	print(t0)
 	
 	transects <- Rstox::surveyPlanner(
-		projectName = stratum, # Here 'stratum' is from the getPelfossPaths().
+		projectName = stratumFile, # Here 'stratumFile' is from the getPelfossPaths().
 		type = type, 
 		bearing = bearing, 
 		hours = hours, 
@@ -638,7 +642,7 @@ biomass2tsb <- function(
 		byStratum = byStratum, 
 		keepTransport = keepTransport, 
 		centroid = centroid, 
-		...
+		... # Contains the 'strata' argument, which defines the strata to read from the stratum polygon file.
 	)
 	
 	
@@ -689,7 +693,7 @@ biomass2tsb <- function(
 	###	LcmMean <- getTotalBiomass(superind=superind, stratumPolygons=stratumUnionMatrix, day=midDayOfSurvey, type="length")$AllStrata
 	# Get the NASC values from the biomass horizontal area density:
 	insideRange <- if(length(radius) == 2) radius[2] else NULL
-	transects <- interpolateBiomassToTransects(biomass=biomass, superind=superind, transects=transects, centroid=centroid, logDays=logDays, m=m, TS0=TS0, insideRange=insideRange, condPar=condPar, LcmMean=LcmMean)
+	transects <- interpolateBiomassToTransects(biomass = biomass, superind = superind, transects = transects, centroid = centroid, logDays = logDays, m = m, TS0 = TS0, insideRange = insideRange, condPar = condPar, LcmMean = LcmMean)
 	# NORWECOM biomass is given in grams
 	#Wkg <- Wg * 1e-3
 	
@@ -732,6 +736,7 @@ biomass2tsb <- function(
 		sa..ch.1 = round(transects$Transect$NASC, digits=6), 
 		# Why did we incldue this?:
 		NASC = transects$Transect$NASC, 
+		stratum = transects$Transect$stratum, 
 		stringsAsFactors=FALSE
 	)
 	
@@ -744,8 +749,10 @@ biomass2tsb <- function(
 	############################################
 
 	cat("Get total biomass...\n")
-	strataInd <- match(transects$Stratum$stratum, names(transects$Input$lonlat))
-	totalBiomass <- getTotalBiomass(superind=superind, stratumPolygons=transects$Input$lonlat, strataInd=strataInd, type="biomass", superindFilter=superindFilter)
+	strataInd <- match(transects$Stratum$stratum, names(transects$Input$lonlat)) # This is due to sloppy coding, where the names of the SpatialPolygons object and the lonlat object differs (IDs not set to the SpatialPolygons object).
+	
+	# Get the total biomass inside the strata for each day of the survey. These are averaged over the days of the survey in getTSB():
+	totalBiomass <- getTotalBiomass(superind = superind, stratumPolygons = transects$Input$lonlat, strataInd = strataInd, type = "biomass", superindFilter = superindFilter)
 	
 	############################################
 	############################################
@@ -758,7 +765,7 @@ biomass2tsb <- function(
 	cat("Draw trawl stations...\n")
 	
 	# Draw trawl stations (get the indices of the log distances with trawl):
-	trawlInd <- drawTrawlStationInd(transects$Transect$NASC, nTrawl, probfact=probfact)
+	trawlInd <- drawTrawlStationInd(transects$Transect$NASC, nTrawl, probfact = probfact)
 	if((length(trawlInd) == 0)){
 		return(NULL)
 	}
@@ -784,11 +791,12 @@ biomass2tsb <- function(
 		y_mid = transects$Transect$y_mid[trawlInd], 
 		species = tsn, 
 		samplenumber = samplenumber, 
+		noname = getNoname(tsn),
 		distance = distance, stringsAsFactors=FALSE
 	)
 
 	# Simulate the trawls:
-	biotic <- simulateTrawl(superind, fishStation, seed=seed$trawl, radius=radius, N=N, superindFilter=superindFilter, LcmMean=LcmMean)
+	biotic <- simulateTrawl(superind, fishStation, seed = seed$trawl, radius = radius, N = N, superindFilter = superindFilter, LcmMean = LcmMean)
 	superindCount <- biotic$superindCount
 	biotic <- biotic$biotic
 	
@@ -800,9 +808,9 @@ biomass2tsb <- function(
 	transects$Transect$serialno <- NA
 	transects$Transect$serialno[trawlInd] <- fishStation$serialno
 	
-	# Discard strata with no biotic data:
-	#sumBiotic <- by(transects$Transect$stratum, transects$Transect$superindCount, sum, na.rm=TRUE)
-	sumBiotic <- by(transects$Transect$superindCount, transects$Transect$stratum, sum, na.rm=TRUE)
+	### # Discard strata with no biotic data:
+	### #sumBiotic <- by(transects$Transect$stratum, transects$Transect$superindCount, sum, na.rm=TRUE)
+	sumBiotic <- by(transects$Transect$superindCount, transects$Transect$stratum, sum, na.rm = TRUE)
 	hasNoBiotic <- sumBiotic == 0
 	if(all(hasNoBiotic)){
 		warning("All strata had no biotic data (no non-empty trawl stations")
@@ -810,38 +818,9 @@ biomass2tsb <- function(
 	}
 	else if(any(hasNoBiotic)){
 		badStrata <- names(sumBiotic)[hasNoBiotic]
-		warning(paste("The following strata had no biotic data (no non-empty trawl stations), and vere discarded in the acousic.xml file: "), paste(badStrata, collapse=", "))
-		transects$Transect <- transects$Transect[! transects$Transect$stratum %in% badStrata, , drop=FALSE]
+		warning(paste("The following strata had no biotic data (no non-empty trawl stations), and vere discarded in the acousic.xml file: "), paste(badStrata, collapse = ", "))
+		acoustic <- acoustic[! acoustic$stratum %in% badStrata, , drop = FALSE]
 	}
-	
-	
-	################################################################
-	################################################################
-
-
-	# The plotting should be revised, and possibly put inside the plotStratum(), and maybe put outside of the function:
-	
-	#########################
-	##### 5. Visualize: #####
-	#########################
-
-	#p <- plotStratum(transects)
-    #
-	## Plot with the trals and NASC:
-	#p1 <- plotPelfoss(
-	#	p, 
-	#	transects,
-	#	biomass,
-	#	day=222, 
-	#	trawlInd=trawlInd, 
-	#	ncolour=40, 
-	#	maxBiom=700, 
-	#	maxNasc=4000, 
-	#	#col=list(h=c(0.95, 0.98), s=c(0.35, 1), v=c(0.9, 0.5)), 
-	#	NASCthr=0.001, 
-	#	NASCexp=2
-	#)
-
 	#########################
 	#########################
 
@@ -857,12 +836,12 @@ biomass2tsb <- function(
 	tempfile_acoustic <- file.path(xmlOutputDir, "acoustic.xml")
 
 	cat("Write biotic xml...\nTime used:\n")
-	temp <- system.time(Rstox::writeBioticXML(biotic, tempfile_biotic, xsd=xsd$biotic, cores=cores$biotic))
+	temp <- system.time(Rstox::writeBioticXML(biotic, tempfile_biotic, xsd = xsd$biotic, cores = cores$biotic))
 	#cat("Time used:\n")
 	#print(temp)
 	
 	cat("Write acoustic xml...\nTime used:\n")
-	temp <- system.time(Rstox::writeAcousticXML(acoustic, tempfile_acoustic, xsd=xsd$acoustic, cores=cores$acoustic))
+	temp <- system.time(Rstox::writeAcousticXML(acoustic, tempfile_acoustic, xsd = xsd$acoustic, cores = cores$acoustic))
 	#cat("Time used:\n")
 	#print(temp)
 		
@@ -885,23 +864,28 @@ biomass2tsb <- function(
 	# define the paths to the input files:
 	file_biotic <- file.path(input_full["biotic"], "biotic.xml")
 	file_acoustic <- file.path(input_full["acoustic"], "acoustic.xml")
-
-
+	
 	model <- list(
 		# Baseline: 
 		"ReadProcessData", 
 		ReadAcousticXML = list(
 			FileName1 = file.path(input["acoustic"], "acoustic.xml")
 		), 
-		NASC = list(
+		SumNASC = list(
 			AcousticData = "ReadAcousticXML", 
 			LayerType = "WaterColumn"
 		), 
 		ReadBioticXML = list(
 			FileName1 = file.path(input["biotic"], "biotic.xml")
 		), 
-		StationLengthDist = list(
+		# Added after Rstox 1.11:
+		RedefineSpecCat = list(
 			BioticData = "ReadBioticXML", 
+			SpecCatMethod = "SelectVar", 
+			SpecVarBiotic = "commonname"
+		),
+		StationLengthDist = list(
+			BioticData = "RedefineSpecCat", 
 			LengthDistType = "PercentLengthDist"
 		), 
 		RegroupLengthDist = list(
@@ -919,12 +903,12 @@ biomass2tsb <- function(
 		),
 		MeanNASC = list(
 			ProcessData = "ReadProcessData", 
-			NASC = "NASC", 
+			NASC = "SumNASC", 
 			SampleUnitType = "PSU"
 		), 
 		BioStationAssignment = list(
 			ProcessData = "ReadProcessData", 
-			BioticData = "ReadBioticXML", 
+			BioticData = "RedefineSpecCat", 
 			AssignmentMethod = "UseProcessData", 
 			EstLayers = "1~PELBOT"
 		), 
@@ -935,7 +919,7 @@ biomass2tsb <- function(
 		#SweptAreaDensity = list(
 		#	ProcessData = "ReadProcessData", 
 		#	SweptAreaMethod = "LengthDependent", 
-		#	BioticData = "ReadBioticXML", 
+		#	BioticData = "DefineSpecCat", 
 		#	LengthDist = "TotalLengthDist", 
 		#	DistanceMethod = "FullDistance",
 		#	sweepWidthMethod = "Constant", 
@@ -965,7 +949,7 @@ biomass2tsb <- function(
 			Abundance = "Abundance"
 		), 
 		IndividualData = list(
-			BioticData = "ReadBioticXML", 
+			BioticData = "RedefineSpecCat", 
 			IndividualDataStations = "IndividualDataStations"
 		), 
 		SuperIndAbundance = list(
@@ -1001,27 +985,26 @@ biomass2tsb <- function(
 	)
 
 	# Create the project skeleton:
-	Rstox::createProject(projectName, model=model, ow=TRUE)
+	Rstox::createProject(projectName, model = model, ow = TRUE)
 
 
 	# Copy the input files to the project input directory:
-	file.copy(tempfile_biotic, file_biotic, overwrite=TRUE)
-	file.copy(tempfile_acoustic, file_acoustic, overwrite=TRUE)
+	file.copy(tempfile_biotic, file_biotic, overwrite = TRUE)
+	file.copy(tempfile_acoustic, file_acoustic, overwrite = TRUE)
 
-
-
+	
 	##### Modify and run the StoX project:
 	# Get the path to the project.xml file_
 	projectXML <- Rstox::getProjectPaths(projectName)$projectXML
 
 	# Write the stratum polygons, the edsupsu, the psustratum, the suassignment, and the bioticassignment to the project.xml file directly:
-	insertStratumpolygon(transects$Input$lonlat, file=projectXML)
+	insertStratumpolygon(transects$Input$lonlat, file = projectXML)
 
-	insertEdsupsu(transects$Transect, file=projectXML)
+	insertEdsupsu(transects$Transect, file = projectXML)
 
-	insertPsustratum(transects$Transect, file=projectXML)
+	insertPsustratum(transects$Transect, file = projectXML)
 
-	insertSuassignment(transects$Transect, file=projectXML)
+	insertSuassignment(transects$Transect, file = projectXML)
 
 	# Write the bioticassignment
 	
@@ -1030,12 +1013,20 @@ biomass2tsb <- function(
 	#	stationID = paste(biotic$cruise, biotic$serialno, sep="/"), stringsAsFactors=FALSE
 	#)
 	
-	hasFish <- which(transects$Transect$superindCount > 0)
+	# Do not discard strata with no superindividuals anymore, since there could still be NASC in the stratum:
+	#hasFish <- which(transects$Transect$superindCount > 0)
+	#Stations <- data.frame(
+	#	stratum = transects$Transect$stratum[hasFish], 
+	#	stationID = paste(transects$Transect$cruise[hasFish], transects$Transect$serialno[hasFish], sep="/"), stringsAsFactors=FALSE
+	#)
+	
+	# Write biotic assignment to the project.xml file. Keep only those with non-NA serialnumber
+	nonNA <- !is.na(transects$Transect$serialno)
 	Stations <- data.frame(
-		stratum = transects$Transect$stratum[hasFish], 
-		stationID = paste(transects$Transect$cruise[hasFish], transects$Transect$serialno[hasFish], sep="/"), stringsAsFactors=FALSE
+		stratum = transects$Transect$stratum[nonNA], 
+		stationID = paste(transects$Transect$cruise[nonNA], transects$Transect$serialno[nonNA], sep = "/"), stringsAsFactors = FALSE
 	)
-	insertBioticassignment(Stations, file=projectXML)
+	insertBioticassignment(Stations, file = projectXML)
 
 
 	# Reopen and save the project. This is required to order the process data properly:
@@ -1046,13 +1037,13 @@ biomass2tsb <- function(
 	#g <- runBaseline(projectName, exportCSV=TRUE)
 	
 	# Bootstrap:
-	boot <- Rstox::runBootstrap(projectName, nboot=nboot, seed=seed$bootstrap, bootstrapMethod="AcousticTrawl", cores=cores$bootstrap, ...)
+	boot <- Rstox::runBootstrap(projectName, nboot = nboot, seed = seed$bootstrap, bootstrapMethod = "AcousticTrawl", cores = cores$bootstrap, ...)
 
 	# Get the total weight with precision:
 	#reports <- getReports(projectName)
-	#reports <- getReports(projectName, grp1=NULL)
+	#reports <- getReports(projectName, grp1 = NULL)
 	#reports <- getReports(projectName, var="Weight")
-	report <- Rstox::getReports(projectName, var="Weight", unit="mt", grp1=NULL, drop.out=FALSE)
+	report <- Rstox::getReports(projectName, var = "Weight", unit = "mt", grp1 = NULL, drop.out = FALSE)
 	
 	# Save project data and close the project:
 	Rstox::saveProjectData(projectName)
@@ -1065,7 +1056,7 @@ biomass2tsb <- function(
 	
 
 	# Output a list of relevant objects:
-	out <- list(report=report, totalBiomass=totalBiomass, superind=superind, transects=transects, biomass=biomass, t0=t0, daysOfSurvey=daysOfSurvey, startDayOfSurvey=startDayOfSurvey, midDayOfSurvey=midDayOfSurvey, endDayOfSurvey=endDayOfSurvey, startDateOfSurvey=startDateOfSurvey, endDateOfSurvey=endDateOfSurvey, projectName=projectName)
+	out <- list(report = report, totalBiomass = totalBiomass, superind = superind, transects = transects, biomass = biomass, t0 = t0, daysOfSurvey = daysOfSurvey, startDayOfSurvey = startDayOfSurvey, midDayOfSurvey = midDayOfSurvey, endDayOfSurvey = endDayOfSurvey, startDateOfSurvey = startDateOfSurvey, endDateOfSurvey = endDateOfSurvey, projectName = projectName)
 	
 	# Add total (estimated) stock biomass (TSB) and theoretical stock biomass (ThSB):
 	#out$report <- getTSB(out, unit=unit)
@@ -1079,7 +1070,7 @@ biomass2tsb <- function(
 #' @export
 #' @rdname biomass2tsb
 #'
-biomass2nasc <- function(Wg, LcmOne, a, b, m=20, TS0=-71.9){
+biomass2nasc <- function(Wg, LcmOne, a, b, m = 20, TS0 = -71.9){
 	# Function for converting from length in cm to weight in g:
 	Lcm2Wg <- function(Lcm, a, b){
 		# Standard length - weight relationship:
@@ -1087,23 +1078,23 @@ biomass2nasc <- function(Wg, LcmOne, a, b, m=20, TS0=-71.9){
 		a * Lcm^b
 	}
 	# Target strength of a fish with length given in cm:
-	TS <- function(Lcm, m=20, TS0=-71.9){
+	TS <- function(Lcm, m = 20, TS0 = -71.9){
 		TS <- m * log10(Lcm) + TS0
 	}
 	# Backscattering cross section of a fish with length given in cm:
-	sigmabs <- function(Lcm, m=20, TS0=-71.9){
-		10^(TS(Lcm=Lcm, m=m, TS0=TS0) / 10)
+	sigmabs <- function(Lcm, m = 20, TS0 = -71.9){
+		10^(TS(Lcm = Lcm, m = m, TS0 = TS0) / 10)
 	}
 	
 	
 	# Get the weight of one fish:
-	WgOne <- Lcm2Wg(Lcm=LcmOne, a=a, b=b)
+	WgOne <- Lcm2Wg(Lcm = LcmOne, a = a, b = b)
 	
 	# Get the fractional number of fish:
 	numFish <- Wg / WgOne
 	
 	# Get the backscattering of one fish:
-	sigmabsOne <- sigmabs(LcmOne, m=m, TS0=TS0)
+	sigmabsOne <- sigmabs(LcmOne, m = m, TS0 = TS0)
 	
 	# Convert to NASC:
 	NASC <- 4 * pi * 1852^2 * numFish * sigmabsOne
@@ -1118,14 +1109,22 @@ biomass2nasc <- function(Wg, LcmOne, a, b, m=20, TS0=-71.9){
 	return(out)
 }
 
+getNoname <- function(tsn){
+	# Hard coded conversion utill a better solution is in place for Rstox, such as all reference data provided as a resource in Rstox:
+	tsn2noname <- data.frame(
+		tsn = c(161722, 172414), 
+		noname = c("sild", "makrell"),
+		stringsAsFactors = FALSE
+	)
+	tsn2noname$noname[tsn2noname$tsn == tsn]
+}
 
 #*********************************************
 #*********************************************
 #' Plot the output from biomass2tsb() or runPelfoss().
 #'
 #' @param x				The output from \code{\link{biomass2tsb}} (containing object named report, totalBiomass, superind, transects, biomass).
-#' @param ncolour		The number of colours used to plot the biomass field in layers.
-#' @param col			A list of hue, saturation and value ranges, between which a sequence of 'ncolour' is used for the biomass layers, or a color vector such as gray(ncolour, 0.2, 0.8).
+#' @param biomCol		The color of the biomass field.
 #' @param logColscale	Logical: If TRUE, use 10 * log10 for the plotted biomass layers.
 #' @param firstcol		The color to use for the first biomass level (the default, NA, omits plotting the first layer, which may include 0-values).
 #' @param NASCthr		A value below which NASC values are omitted when plotted as black dots with size proportional to NASC^NASCexp.
@@ -1141,13 +1140,11 @@ biomass2nasc <- function(Wg, LcmOne, a, b, m=20, TS0=-71.9){
 #'
 plotPelfoss <- function(
 	x, 
-	ncolour = 20, 
-	col = list(h=c(0.6, 0.98), s=c(0.35, 1), v=c(0.9, 0.3)), 
-	logColscale   = TRUE, 
-	firstcol = NA, 
+	biomassthr = 1, 
 	NASCthr = 0.001, 
 	NASCexp = 2, 
 	NASCmax_size = 2, 
+	biomCol = "blue", 
 	biomAlpha = 0.1, 
 	biomShape = 20, 
 	biomSize = 2, 
@@ -1157,9 +1154,12 @@ plotPelfoss <- function(
 	plot = c("biom", "nasc", "trawl", "super"), 
 	daysOfSurvey = NULL, 
 	timerange = NULL, 
+	show = TRUE, 
 	#alldays = TRUE, 
 	...){
 	
+	# Get the optional arguments:
+	lll <- list(...)
 	
 	# Apply the timerange:
 	if(length(timerange) == 2){
@@ -1171,9 +1171,13 @@ plotPelfoss <- function(
 	if(nrow(x$transects$Transect) == 0){
 		p <- ggplot()
 		p0 <- p
-		return(list(p=p, p0=p0))
+		return(list(p = p, p0 = p0))
 	}
 	p <- plotStratum(x$transects, ...)
+	# Change to Upper case first letter of the legend "stratum":
+	p <- p + labs(fill = "Stratum")
+	
+	# Save the original plot from plotStratum in Rstox:
 	p0 <- p
 	
 					### # Get the super individuals:
@@ -1182,95 +1186,77 @@ plotPelfoss <- function(
 					### }
 	
 	# Get the biomass to plot, either as an average of the days of the survey, or at the mid day of the survey:
-	x <- getBiomassOfSurvey(x, daysOfSurvey=daysOfSurvey, fresh=if(length(daysOfSurvey)) TRUE else FALSE)
+	x <- getBiomassOfSurvey(x, daysOfSurvey = daysOfSurvey, fresh = if(length(daysOfSurvey)) TRUE else FALSE)
 	
-	maxBiomass <- max(x$biomassOfSurvey$biomass, na.rm=TRUE) * biomThr
-	if(logColscale){
-		biomassSeq <- seq(0, 10*log10(maxBiomass), length.out=ncolour)
-		biomassSeq <- 10^(biomassSeq/10)
-	}
-	else{
-		biomassSeq <- seq(0, maxBiomass, length.out=ncolour)
-	}
 	
-	if(is.list(col) && all(c("h", "s", "v") %in% names(col))){
-		col <- hsv(h=seq(col$h[1], col$h[2], l=ncolour), s=seq(col$s[1], col$s[2], l=ncolour), v=seq(col$v[1], col$v[2], l=ncolour))
-	}
+	biomassAbove <- x$biomassOfSurvey
+	# Remove NAs and biomass values below the threshold:
+	biomassAbove <- biomassAbove[!is.na(rowSums(biomassAbove)), ]
+	biomassAbove <- subset(biomassAbove, biomass >= biomassthr)
+	p <- p + geom_point(data = biomassAbove, aes_string(x = "longitude", y = "latitude"), colour = biomCol, alpha = biomAlpha, shape = biomShape, size = biomSize)
 	
-	if(length(firstcol)){
-		col[1] <- firstcol
-	}
-	colorInterval <- findInterval(x$biomassOfSurvey$biomass, biomassSeq)
 	
-	### if("superind" %in%  tolower(plot)){
-	### 	x <- getSuperindOfSurvey(x)
-	### 	#if(length(x$superindOfSurvey)==0  && length(x$superind)){
-	### 	#	x$superindOfSurvey <- as.data.frame(getSuperindOfDay(x$superind, x$midDayOfSurvey)[c("Long", "Latt")])
-	### 	#}
-	### 	#else if(length(x$superindOfSurvey)==0){
-	### 	#	warning("Super individual data missing, and addSuperind cannot be TRUE.")
-	### 	#}
-	### 	p <- p + geom_point(data=x$superindOfSurvey, aes(x=Long, y=Latt), shape=2, color="black", size=0.2)
-	### }
 	
-	# Add biomass to the transect plot:
-	if(any(startsWith(tolower(plot), "biom"))){
-		for(i in seq_len(ncolour)){
-			p <- p + geom_point(data=x$biomassOfSurvey[colorInterval==i, ], aes_string(x="longitude", y="latitude"), colour=col[i], alpha=biomAlpha, shape=biomShape, size=biomSize)
-		}
-	}
 	
-	# Add NASC values larger than NASCthr of the fraction of NASC relative to maxNASC:
-	maxNasc <- max(x$transects$Transect$NASC, na.rm=TRUE)
-	pointSize <- (x$transects$Transect$NASC/maxNasc)^NASCexp
-	
+	# Define the size of the NASC points:
+	pointSize <- x$transects$Transect$NASC
+	# Apply a threshold on the points:
 	pointSize[pointSize < NASCthr] <- NA
-	x$transects$Transect <- cbind(x$transects$Transect, pointSize=pointSize)
+	
+	# Divide by the maximum, raise to the power of NASCexp:
+	#maxNasc <- max(pointSize, na.rm = TRUE)
+	#pointSize <- (pointSize / maxNasc)^NASCexp
+	
+	## Add NASC values larger than NASCthr of the fraction of NASC relative to maxNASC:
+	#maxNasc <- max(x$transects$Transect$NASC, na.rm = TRUE)
+	## Using NASCexp == 2 indicates area of the points:
+	#pointSize <- (x$transects$Transect$NASC / maxNasc)^NASCexp
+	
+	#pointSize[pointSize < NASCthr] <- NA
+	x$transects$Transect <- cbind(x$transects$Transect, pointSize = pointSize)
 	#if("nasc" %in%  tolower(plot)){
 	if(any(startsWith(tolower(plot), "nasc"))){
-		p <- p + geom_point(data=x$transects$Transect, aes_string(x="lon_mid", y="lat_mid", size="pointSize"), shape=20)  +  scale_size_area(max_size=NASCmax_size, guide=FALSE)
+		p <- p + geom_point(data = x$transects$Transect, aes_string(x = "lon_mid", y = "lat_mid", size = "pointSize"), shape = 20)  +  scale_size_area(name = bquote("NASC (" ~ m^2 ~ nmi^-2 ~ ")"), max_size = NASCmax_size, guide = guide_legend(override.aes = list(linetype = "blank")))
 	}
 	
 	# Plot the trawl stations
 	#if("trawl" %in%  tolower(plot)){
 	if(any(startsWith(tolower(plot), "trawl"))){
-		p <- p + geom_point(data=x$transects$Transect[ x$transects$Transect$trawl, ], aes_string(x="lon_mid", y="lat_mid"), shape=42, color="red", size=trawlSize)
+		p <- p + geom_point(data = x$transects$Transect[ x$transects$Transect$trawl, ], aes_string(x = "lon_mid", y = "lat_mid"), shape = 42, color = "red", size = trawlSize)
 	}
 	
 	if(length(stratumcol)){
-		p <- p + scale_fill_manual(values = rep(stratumcol, length.out=nrow(x$transects$Stratum)))
+		p <- p + scale_fill_manual(values = rep(stratumcol, length.out = nrow(x$transects$Stratum)))
 	}
 	
-	suppressWarnings(print(p))
-	list(p=p, p0=p0)
+	# Order the legends:
+	p <- p + guides(
+			fill = guide_legend(order = 1),
+			size  = guide_legend(override.aes = list(linetype = "blank"), order = 2))
+			
+	# Set the font sizes:
+	p <- p + 
+		theme(
+			axis.title.x = element_text(size = if(length(lll$axis.title.x)) lll$axis.title.x else 10), 
+			axis.title.y = element_text(size = if(length(lll$axis.title.y)) lll$axis.title.y else 10), 
+			axis.text.x = element_text(size = if(length(lll$axis.text.x)) lll$axis.text.x else 10), 
+			axis.text.y = element_text(size = if(length(lll$axis.text.y)) lll$axis.text.y else 10), 
+			legend.text = element_text(size = if(length(lll$legend.text)) lll$legend.text else 10)
+		)
+	
+	if(show) {
+		suppressWarnings(print(p))
+	}
+	
+	list(p = p, p0 = p0)
 }
-### #'
-### #' @export
-### #' @importFrom Rstox getPlottingUnit 
-### #' @rdname plotPelfoss
-### #'
-### plotTSB <- function(x, unit="mt"){
-### 	scale <- Rstox::getPlottingUnit(unit, var="weight")$scale
-### 	x$totalBiomass$Total <- x$totalBiomass$Total / scale
-### 	x$totalBiomass$NonEmptyStrata <- x$totalBiomass$NonEmptyStrata / scale
-### 	x$totalBiomass$AllStrata <- x$totalBiomass$AllStrata / scale
-### 	TSB <- getTSB(x, unit=unit)$bootstrap$abnd
-### 	
-### 	plot(x$totalBiomass$Total, ylim=c(0, max(x$totalBiomass$Total)))
-### 	points(x$totalBiomass$AllStrata, col=2)
-### 	points(x$totalBiomass$NonEmptyStrata, col=3)
-### 	abline(h = TSB$Ab.Sum.mean)
-### 	abline(h = TSB$'Ab.Sum.50%', lty=2)
-### 	abline(v = range(x$daysOfSurvey))
-### }
 #'
 #' @export
 #' @keywords internal
 #' @importFrom Rstox getPlottingUnit 
 #' @rdname plotPelfoss
 #'
-getTSB <- function(x, unit="mt", digits=4){
-	
+getTSB <- function(x, unit = "mt", digits = 4){
 	# Remove the name column:
 	x$report$reportAbundance$bootstrap$abnd <- x$report$reportAbundance$bootstrap$abnd[,-1]
 	
@@ -1278,7 +1264,7 @@ getTSB <- function(x, unit="mt", digits=4){
 	x$report$reportAbundance$bootstrap$abnd[names(x$report$reportAbundance$bootstrap$abnd) != "Ab.Sum.cv"] <- x$report$reportAbundance$bootstrap$abnd[names(x$report$reportAbundance$bootstrap$abnd) != "Ab.Sum.cv"] * x$report$reportAbundance$bootstrap$scale
 	
 	# The scale to the requested unit:
-	scale <- getPlottingUnit(unit, var="weight")$scale
+	scale <- getPlottingUnit(unit, var = "weight")$scale
 	x$report$reportAbundance$bootstrap$abnd[names(x$report$reportAbundance$bootstrap$abnd) != "Ab.Sum.cv"] <- x$report$reportAbundance$bootstrap$abnd[names(x$report$reportAbundance$bootstrap$abnd) != "Ab.Sum.cv"] / scale
 	#ThSB_inside <- x$totalBiomass$NonEmptyStrata[x$midDayOfSurvey] / scale
 	#ThSB_insideAll <- x$totalBiomass$AllStrata[x$midDayOfSurvey] / scale
@@ -1293,7 +1279,7 @@ getTSB <- function(x, unit="mt", digits=4){
 			midDayOfSurvey = x$midDayOfSurvey, 
 			endDayOfSurvey = x$endDayOfSurvey, 
 			startDateOfSurvey = x$startDateOfSurvey,
-			endDateOfSurvey = x$endDateOfSurvey, stringsAsFactors=FALSE
+			endDateOfSurvey = x$endDateOfSurvey, stringsAsFactors = FALSE
 		),
 		x$report$reportAbundance$bootstrap$abnd[, c("Ab.Sum.5%", "Ab.Sum.50%", "Ab.Sum.95%", "Ab.Sum.mean", "Ab.Sum.sd", "Ab.Sum.cv")], 
 		data.frame(
@@ -1316,7 +1302,7 @@ getTSB <- function(x, unit="mt", digits=4){
 			TSB_95percentByInside = x$report$reportAbundance$bootstrap$abnd[["Ab.Sum.95%"]] / ThSB_inside, 
 			TSB_95percentByInsideAll = x$report$reportAbundance$bootstrap$abnd[["Ab.Sum.95%"]] / ThSB_insideAll, 
 			TSB_95percentByTotal = x$report$reportAbundance$bootstrap$abnd[["Ab.Sum.95%"]] / ThSB_total, 
-			stringsAsFactors=FALSE
+			stringsAsFactors = FALSE
 		)
 	)
 	
@@ -1330,40 +1316,9 @@ getTSB <- function(x, unit="mt", digits=4){
 #' @importFrom utils head write.table
 #' @rdname plotPelfoss
 #' 
-getAllTSB <- function(dir, run="Run1", outfile=NULL, copy=TRUE){
-	# Get PELFOSS files:
-	getPelfossFiles <- function(l, lshort, dirs, type="output", copy=TRUE){
-		# Define keys to grep by:
-		keys <- list(
-			output = "PelfossProjectRstox/output/r/report/pelfossOutput.RData", 
-			plot = "PelfossProjectRstox/output/r/report/pelfossOutput.png"
-		)
-		
-		# Get the directory in which to put the files:
-		allPelfossDir <- file.path(
-			dirs$thisrundir, 
-			paste("all", type, sep="_"), 
-			paste(type, "TSB", sep="_")
-		)
-		suppressWarnings(dir.create(allPelfossDir))
-		
-		# Get the file names as the concatination of the folders:
-		atPelfossFiles <- grep(keys[[type]], l)
-		pelfossFiles <- l[atPelfossFiles]
-		# Split the file names and paste the folders for the survey, resolution, year, direction+timing and seed:
-		filetag <- strsplit(lshort[atPelfossFiles], "/")
-		filetag <- sapply(filetag, function(x) paste(head(x, 5), collapse="_"))
-		# Add the file base names:
-		pelfossFiles_new <- paste(filetag, basename(pelfossFiles), sep="_")
-		# Expand to the full path:
-		pelfossFiles_new <- file.path(allPelfossDir, pelfossFiles_new)
-		
-		# Copy the files:
-		file.copy(pelfossFiles, pelfossFiles_new, overwrite=TRUE)
-		
-		return(list(orig=pelfossFiles, new=pelfossFiles_new, filetag=filetag))
-	}
+getAllTSB <- function(dir, run = "Run1", outfile = NULL, copy = TRUE) {
 	
+	# Function to get the run info from the file names:
 	splitRunName <- function(x){
 		getBetween <- function(x, start, end){
 			if(is.character(start)){
@@ -1380,9 +1335,12 @@ getAllTSB <- function(dir, run="Run1", outfile=NULL, copy=TRUE){
 		
 		survey <- getBetween(x, 1, "_res_")
 		res <- getBetween(x, "_res_", "_year_")
-		year <- getBetween(x, "_year_", "_direction_")
-		direction <- getBetween(x, "_direction_", "_timing_")
-		timing <- getBetween(x, "_timing_", "_seed_")
+		#year <- getBetween(x, "_year_", "_direction_")
+		year <- getBetween(x, "_year_", "_dir_")
+		#direction <- getBetween(x, "_direction_", "_timing_")
+		direction <- getBetween(x, "_dir_", "_tim_")
+		#timing <- getBetween(x, "_timing_", "_seed_")
+		timing <- getBetween(x, "_tim_", "_seed_")
 		seed <- getBetween(x, "_seed_", NULL)
 		
 		data.frame(
@@ -1395,43 +1353,146 @@ getAllTSB <- function(dir, run="Run1", outfile=NULL, copy=TRUE){
 		)
 	}
 	
-	dirs <- getPelfossSkeleton(dir, run=run)
 	
-	# List all projects:
-	projectsDir <- dirs$projectdir
-	l <- list.files(projectsDir, recursive=TRUE, full.names=TRUE)
-	lshort <- list.files(projectsDir, recursive=TRUE, full.names=FALSE)
-	
-	# Get and copy files:
-	allOutputFiles <- getPelfossFiles(l, lshort, dirs, type="output", copy=copy)
-	allPlotFiles <- getPelfossFiles(l, lshort, dirs, type="plot", copy=copy)
-	
-	# Load all output files into a list:
-	data <- lapply(allOutputFiles$new, function(x) mget(load(x)))
-	names(data) <- allOutputFiles$filetag
+	# Read all the pelfoss output files:
+	data <- readPelfossOutputFiles(dir, run = run)
 	
 	# Get the reports:
 	reports <- do.call(rbind, lapply(data, function(x) getTSB(x$pelfossOutput)$bootstrap$abnd))
-	#reports <- do.call(rbind, lapply(seq_along(data), function(ind) {print(ind); print(allOutputFiles$filetag[ind]); getTSB(data[[ind]]$pelfossOutput)$bootstrap$abnd}))
-	
-	reports <- cbind(splitRunName(rownames(reports)), reports, name=rownames(reports), stringsAsFactors=FALSE)
+
+	# Add run info:
+	reports <- cbind(splitRunName(rownames(reports)), reports, name = rownames(reports), stringsAsFactors = FALSE)
 	rownames(reports) <- NULL
 	
+	# Order the reports by syrvey and year:
 	reports <- reports[order(reports$Survey, reports$Year),]
-
+	
 	# Write the reports to file:
-	if(length(outfile)==0 || !is.character(outfile)){
-		outfile <- file.path(dirs$reportsdir, c("allReports.txt", "allReportsSmall.txt"))
-	}
-	write.table(reports, file=outfile[1], sep="\t", dec=".", row.names=FALSE, fileEncoding="UTF-8")
-	if(length(outfile) > 1){
-		reports_small <- simplifyAllTSB(reports)
-		write.table(reports_small, file=outfile[2], sep="\t", dec=".", row.names=FALSE, fileEncoding="UTF-8")
+	writePelfossReports(reports, run, dir)
+	
+	# return(list(reports = reports, data = data, allOutputFiles = allOutputFiles, allPlotFiles = allPlotFiles))
+	return(list(reports = reports, data = data))
+}
+
+copyPelfossOutputFiles <- function(dir, run = "Run1") {
+	
+	# Get the paths to the pelfoss folder structure:
+	pelfossSkeleton <- getPelfossSkeleton(dir, run = run)
+	
+	# List all projects:
+	projectsDir <- pelfossSkeleton$dirs$projectdir
+	# Get all folders in the projectsDir, and discard everything after the "StoX" folder:
+	dirlist <- list.dirs(projectsDir)
+	dirlist <- gsub("(StoX).*", "\\1", dirlist)
+	# Discard all not endig with StoX:
+	dirlist <- dirlist[endsWith(dirlist, "StoX")]
+	projects <- unique(dirlist)
+	
+	# Get the paths to the pelfoss output for each project:
+	projectPaths <- lapply(projects, Rstox::getProjectPaths)
+	RReportDir <- sapply(projectPaths, "[[", "RReportDir")
+	pelfossOutputFileNames <- file.path(RReportDir, "pelfossOutput.RData")
+	
+	# Define file paths of the files to copy to, concatenating the folders og the original files:
+	filetag <- strsplit(pelfossOutputFileNames, "/")
+	filetag <- lapply(filetag, function(x) paste(rev(rev(x)[6:10]), collapse = "_"))
+	fileName <- paste(filetag, basename(pelfossOutputFileNames), sep = "_")
+	
+	# Place the files in the "SurveyReports" folder (create this if non existing)
+	SurveyReportsDir <- file.path(pelfossSkeleton$dirs$reportsdir, "SurveyReports")
+	dir.create(SurveyReportsDir, showWarnings = FALSE)
+	newPelfossOutputFileNames <- file.path(SurveyReportsDir, fileName)
+	
+	# Copy the files:
+	file.copy(pelfossOutputFileNames, newPelfossOutputFileNames, overwrite = TRUE)
+	
+	return(
+		list(
+			orig = pelfossOutputFileNames, 
+			new = newPelfossOutputFileNames, 
+			filetag = filetag
+			)
+		)
+}
+
+readPelfossOutputFiles <- function(dir, run = "Run1") {
+	# Copy the output files to a common directory, and read the files from there:
+	pelfossOutputFiles <- copyPelfossOutputFiles(dir, run = run)
+	# Load all output files into a list:
+	data <- lapply(pelfossOutputFiles$new, function(x) mget(load(x)))
+	names(data) <- pelfossOutputFiles$filetag
+	
+	for(ind in seq_along(data)) {
+		data[[ind]] <- c(data[[ind]], list(pelfossOutputFile = pelfossOutputFiles$new[ind]))
 	}
 	
-	return(list(reports=reports, data=data, allOutputFiles=allOutputFiles, allPlotFiles=allPlotFiles))
+	data
 }
-simplifyAllTSB <- function(reports, by="InsideAll"){
+
+#'
+#' @export
+#' @import data.table
+#' @rdname plotPelfoss
+#' 
+plotPelfossAll <- function(
+	dir, 
+	run = "Run1", 
+	NASCthr = 0.001, 
+	NASCexp = 2, 
+	NASCmax_size = 2, 
+	biomassthr = 1, 
+	biomCol = "blue", 
+	biomAlpha = 0.1, 
+	biomShape = 20, 
+	biomSize = 2, 
+	biomThr = 1, 
+	trawlSize = 2, 
+	stratumcol = NULL, 
+	plot = c("biom", "nasc", "trawl", "super"), 
+	daysOfSurvey = NULL, 
+	timerange = NULL, 
+	format = "png", 
+	show = TRUE, 
+	...) {
+	
+	# Read all the pelfoss output files:
+	data <- readPelfossOutputFiles(dir, run = run)
+	filetag <- names(data)
+	
+	lll <- list(...)
+	if(!all(c("width", "height") %in% names(lll))){
+		lll$width <- 5000 / lll$res
+		lll$height <- 3000 / lll$res
+	}
+	if(!"res" %in% names(lll)){
+		lll$res <- 500
+	}
+	
+	
+	for(ind in seq_along(data)) {
+		
+		# Run the plot:
+		p <- plotPelfoss(data[[ind]]$pelfossOutput, show = show, quiet = !show, ...)
+		
+		# Get the file names:
+		plotFileNames <- file.path(dirname(data[[ind]]$pelfossOutputFile), paste0(filetag[ind], "_", c("pelfossOutput", "surveyPlanner"), ".", format))
+		# Shift from report to plot:
+		plotFileNames <- sub(file.path("reports", "SurveyReports"), file.path("plots", "SurveyPlots"), plotFileNames, fixed = TRUE)
+		
+		for(i in seq_along(p)){
+			ggsave(
+				filename = plotFileNames[i], 
+				plot = p[[i]], 
+				device = format, 
+				width = lll$width, 
+				height = lll$height, 
+				dpi = lll$res
+				)
+			}
+	}
+}
+
+simplifyAllTSB <- function(reports, by = "InsideAll") {
 	columnsToKeep <- c(
 		"Survey", 
 		"Resolution", 
@@ -1462,18 +1523,6 @@ simplifyAllTSB <- function(reports, by="InsideAll"){
 	
 	return(reports_small)
 }
-### #'
-### #' @export
-### #' @importFrom utils head write.table
-### #' @rdname plotPelfoss
-### #' 
-### getPelfossOutput.RData <- function(dir, run="Run1", survey="Herring_IESNS", year=2010, res=4, reversed=FALSE, dateshift=0, seed=0){
-### 	# Get the rData file:
-### 	files <- getPelfossPaths(dir, run=run, survey=survey, year=year, res=res, reversed=reversed, dateshift=dateshift, seed=seed)
-### 	projectName <- file.path(files$projectPath, "PelfossProjectRstox")
-### 	projectPaths <- getProjectPaths(projectName)
-### 	RData.file <- file.path(projectPaths$RReportDir, "pelfossOutput.RData")
-### }
 
 #*********************************************
 #*********************************************
@@ -1496,7 +1545,7 @@ simplifyAllTSB <- function(reports, by="InsideAll"){
 #' @keywords internal
 #' @rdname simulateTrawl
 #'
-simulateTrawl <- function(superind, fishStation, seed=0, radius=10, nn=NULL, N=100, lengthunit=2, superindFilter=NULL, LcmMean=NULL){
+simulateTrawl <- function(superind, fishStation, seed = 0, radius = 10, nn = NULL, N = 100, lengthunit = 2, superindFilter = NULL, LcmMean = NULL){
 	# Small funciton for calcualting the Eucledian distance given x, y, ...:
 	edist <- function(...){
 		x <- do.call(cbind, list(...))
@@ -1520,12 +1569,12 @@ simulateTrawl <- function(superind, fishStation, seed=0, radius=10, nn=NULL, N=1
 	}
 	
 	# Function for simulating one trawl sample based on the surrounding superindividuals:
-	simulateTrawlOne <- function(ind, superind, fishStation, seedV, radius=10, nn=NULL, N=100, validLengthunit=2, superindFilter=NULL, LcmMean=NULL){
+	simulateTrawlOne <- function(ind, superind, fishStation, seedV, radius = 10, nn = NULL, N = 100, validLengthunit = 2, superindFilter = NULL, LcmMean = NULL){
 		
 		# Get the day of the trawl station:
 		day <- findInterval(fishStation$starttime[ind], superind$time)
 		#thisSuperind <- lapply(superind[c("X", "Y", "inumb", "female", "age", "length", "pweight")], function(x) x[, day])
-		thisSuperind <- getSuperindOfDay(superind, superindDay=day, superindFilter=superindFilter)
+		thisSuperind <- getSuperindOfDay(superind, superindDay = day, superindFilter = superindFilter)
 		
 		# First find the superindividuals within the radius around the station:
 		d <- edist(
@@ -1557,7 +1606,7 @@ simulateTrawl <- function(superind, fishStation, seed=0, radius=10, nn=NULL, N=1
 			s <- rep(inside, N)
 		}
 		else{
-			s <- sample(inside, size=N, prob=prob, replace=TRUE)
+			s <- sample(inside, size = N, prob = prob, replace = TRUE)
 		}
 		
 		# Generate the individual samples:
@@ -1582,7 +1631,7 @@ simulateTrawl <- function(superind, fishStation, seed=0, radius=10, nn=NULL, N=1
 		individual$length <- mround(individual$length, validLengthunit)
 		# Round off weight to grams (given in grams in the MORWECOM output):
 		individual$weight.individual <- individual$weight.individual * 1e-3
-		individual$weight.individual <- round(individual$weight.individual, digits=3)
+		individual$weight.individual <- round(individual$weight.individual, digits = 3)
 		
 		
 		individual
@@ -1603,13 +1652,13 @@ simulateTrawl <- function(superind, fishStation, seed=0, radius=10, nn=NULL, N=1
 	seedV <- Rstox::getSeedV(seed, nstations)
 	
 	# Draw trawl samples:
-	individual <- lapply(seq_len(nstations), simulateTrawlOne, superind=superind, fishStation=fishStation, seedV=seedV, radius=radius, nn=nn, N=N, validLengthunit=validLengthunit, superindFilter=superindFilter, LcmMean=LcmMean)
+	individual <- lapply(seq_len(nstations), simulateTrawlOne, superind = superind, fishStation = fishStation, seedV = seedV, radius = radius, nn = nn, N = N, validLengthunit = validLengthunit, superindFilter = superindFilter, LcmMean = LcmMean)
 	superindCount <- sapply(individual, function(x) if(length(x$superindCount)) head(x$superindCount, 1) else 0)
 	minDist <- sapply(individual, function(x) if(length(x$minDist)) head(x$minDist, 1) else NA)
 	individual <- do.call("rbind", individual)
 	
 	# Merge the fish stations and individuals
-	out <- list(biotic=merge(fishStation, individual), superindCount=superindCount)
+	out <- list(biotic = merge(fishStation, individual), superindCount = superindCount)
 	out
 }
 #'
@@ -1617,7 +1666,7 @@ simulateTrawl <- function(superind, fishStation, seed=0, radius=10, nn=NULL, N=1
 #' @keywords internal
 #' @rdname simulateTrawl
 #'
-drawTrawlStationInd <- function(NASC, nstations=1, seed=0, probfact=0){
+drawTrawlStationInd <- function(NASC, nstations = 1, seed = 0, probfact = 0){
 	# Generate the cummulative probability distribution as the cumsum of the NASC, and draw based on this distribution:
 	NASC0 <- NASC
 	NASC0[is.na(NASC0)] <- 0
@@ -1635,7 +1684,7 @@ drawTrawlStationInd <- function(NASC, nstations=1, seed=0, probfact=0){
 		nstations <- length(prob)
 	}
 	
-	ind <- sample(seq_along(prob), nstations, prob=prob, replace=FALSE)
+	ind <- sort(sample(seq_along(prob), nstations, prob = prob, replace = FALSE))
 	# Return:
 	ind
 }
@@ -1666,7 +1715,7 @@ drawTrawlStationInd <- function(NASC, nstations=1, seed=0, probfact=0){
 #' @keywords internal
 #' @rdname getTotalBiomass
 #' 
-getSuperindOfDay <- function(superind, superindDay=NULL, superindFilter=NULL, stratumPolygons=NULL, transectsXyOfDay=NULL, insideRange=NULL){
+getSuperindOfDay <- function(superind, superindDay = NULL, superindFilter = NULL, stratumPolygons = NULL, transectsXyOfDay = NULL, insideRange = NULL){
 	# Get the number of days:
 	numDays <- length(superind$time)
 	# Get the indices of variables with days at the second dimension:
@@ -1702,12 +1751,12 @@ getSuperindOfDay <- function(superind, superindDay=NULL, superindFilter=NULL, st
 			)
 		}
 		if(is.list(stratumPolygons) && !is.data.frame(stratumPolygons)){
-			insidePolygon <- lapply(stratumPolygons, getInside, superind=superind)
+			insidePolygon <- lapply(stratumPolygons, getInside, superind = superind)
 			insidePolygon <- do.call(pmax, insidePolygon)
 			insidePolygon <- which(insidePolygon > 0)
 		}
 		else if(length(stratumPolygons)){
-			insidePolygon <- getInside(stratumPolygon=stratumPolygons, superind=superind)
+			insidePolygon <- getInside(stratumPolygon = stratumPolygons, superind = superind)
 			insidePolygon <- which(insidePolygon > 0)
 		}
 		else{
@@ -1724,7 +1773,7 @@ getSuperindOfDay <- function(superind, superindDay=NULL, superindFilter=NULL, st
 		
 		# Get the distance between the super individuals and the log distance of the given day
 		superindXyOfDay <- cbind(superind$x, superind$y)
-		system.time(d <- raster::pointDistance(superindXyOfDay, transectsXyOfDay, longlat=FALSE, allpairs=TRUE))
+		system.time(d <- raster::pointDistance(superindXyOfDay, transectsXyOfDay, longlat = FALSE, allpairs = TRUE))
 		
 		for(i in seq_len(10)){
 			
@@ -1749,7 +1798,7 @@ getSuperindOfDay <- function(superind, superindDay=NULL, superindFilter=NULL, st
 #' @keywords internal
 #' @rdname getTotalBiomass
 #' 
-getBiomassOfSurvey <- function(x, daysOfSurvey=NULL, fresh=FALSE){
+getBiomassOfSurvey <- function(x, daysOfSurvey = NULL, fresh = FALSE){
 	if(fresh || length(x$biomassOfSurvey)==0){
 		if(length(x$daysOfSurvey) && length(daysOfSurvey)==0){
 			daysOfSurvey <- x$daysOfSurvey
@@ -1763,21 +1812,6 @@ getBiomassOfSurvey <- function(x, daysOfSurvey=NULL, fresh=FALSE){
 	}
 	return(x)
 }
-### #'
-### #' @export
-### #' @keywords internal
-### #' @rdname getTotalBiomass
-### #' 
-### getSuperindOfSurvey <- function(x, midDayOfSurvey=NULL){
-### 	if(length(x$superindOfSurvey)==0  && length(x$superind)){
-### 		if(length(x$midDayOfSurvey)){
-### 			midDayOfSurvey <- x$midDayOfSurvey
-### 		}
-### 		# Get the supeInd of the mid day of the survey:
-### 		x$superindOfSurvey <- as.data.frame(getSuperindOfDay(x$superind, midDayOfSurvey)[c("Long", "Latt")])
-### 	}
-### 	return(x)
-### }
 #'
 #' @export
 #' @importFrom sp point.in.polygon
@@ -1785,23 +1819,23 @@ getBiomassOfSurvey <- function(x, daysOfSurvey=NULL, fresh=FALSE){
 #' @keywords internal
 #' @rdname getTotalBiomass
 #' 
-getTotalBiomass <- function(superind, stratumPolygons, strataInd=NULL, days=NULL, type=c("biomass", "length"), superindFilter=NULL, union=FALSE, transectsXyOfDay=NULL, insideRange=NULL){
+getTotalBiomass <- function(superind, stratumPolygons, strataInd = NULL, days = NULL, type = c("biomass", "length"), superindFilter = NULL, union = FALSE, transectsXyOfDay = NULL, insideRange = NULL){
 	
 	sumBiomass <- function(d){
-		sum(d$weight * d$inumb, na.rm=TRUE)
+		sum(d$weight * d$inumb, na.rm = TRUE)
 	}
 	
 	meanLengthByTS <- function(d){
-		sqrt(weighted.mean(d$length^2, d$inumb, na.rm=TRUE))
+		sqrt(weighted.mean(d$length^2, d$inumb, na.rm = TRUE))
 	}
 	
 	# Function for getting the biomass of all strata of one day:
-	getTotalBiomassStratum <- function(superindDay, superind, stratumPolygons, superindFilter, strataInd, type=c("biomass", "length")){
+	getTotalBiomassStratum <- function(superindDay, superind, stratumPolygons, superindFilter, strataInd, type = c("biomass", "length")){
 		# Get the indices in the variable in thisSuperind which are inside the straum:
-		getBiomassInside <- function(superindDay, superind, superindFilter, stratumPolygons, strataInd, transectsXyOfDay=NULL, insideRange=NULL, type=c("biomass", "length")){
+		getBiomassInside <- function(superindDay, superind, superindFilter, stratumPolygons, strataInd, transectsXyOfDay = NULL, insideRange = NULL, type = c("biomass", "length")){
 			
 			# Get the superindividualt of the day and polygon:
-			thisSuperind <- getSuperindOfDay(superind=superind, superindDay=superindDay, superindFilter=superindFilter, stratumPolygons=stratumPolygons, transectsXyOfDay=transectsXyOfDay, insideRange=insideRange)
+			thisSuperind <- getSuperindOfDay(superind = superind, superindDay = superindDay, superindFilter = superindFilter, stratumPolygons = stratumPolygons, transectsXyOfDay = transectsXyOfDay, insideRange = insideRange)
 			
 			# Get the total biomass:
 			if(type[1] == "biomass"){
@@ -1818,14 +1852,14 @@ getTotalBiomass <- function(superind, stratumPolygons, strataInd=NULL, days=NULL
 		}
 		
 		# Get the total biomass of the entire stock:
-		total <- getBiomassInside(superindDay=superindDay, superind=superind, superindFilter=superindFilter, stratumPolygons=NULL, transectsXyOfDay=transectsXyOfDay, insideRange=insideRange, type=type)
+		total <- getBiomassInside(superindDay = superindDay, superind = superind, superindFilter = superindFilter, stratumPolygons = NULL, transectsXyOfDay = transectsXyOfDay, insideRange = insideRange, type = type)
 		
 		# Get the biomass of each stratum:
 		if(union){
-			byStratum <- getBiomassInside(superindDay=superindDay, superind=superind, superindFilter=superindFilter, stratumPolygons=stratumPolygons, transectsXyOfDay=transectsXyOfDay, insideRange=insideRange, type=type)
+			byStratum <- getBiomassInside(superindDay = superindDay, superind = superind, superindFilter = superindFilter, stratumPolygons = stratumPolygons, transectsXyOfDay = transectsXyOfDay, insideRange = insideRange, type = type)
 		}
 		else{
-			byStratum <- sapply(stratumPolygons, function(thisStratumPolygon) getBiomassInside(superindDay=superindDay, superind=superind, superindFilter=superindFilter, stratumPolygons=thisStratumPolygon, transectsXyOfDay=transectsXyOfDay, insideRange=insideRange, type=type))
+			byStratum <- sapply(stratumPolygons, function(thisStratumPolygon) getBiomassInside(superindDay = superindDay, superind = superind, superindFilter = superindFilter, stratumPolygons = thisStratumPolygon, transectsXyOfDay = transectsXyOfDay, insideRange = insideRange, type = type))
 		}
 		#byStratum <- sapply(stratumPolygons, getBiomassInside, thisSuperind=thisSuperind, type=type)
 		
@@ -1842,7 +1876,7 @@ getTotalBiomass <- function(superind, stratumPolygons, strataInd=NULL, days=NULL
 	}
 	
 	# Get the biomass for all days and combine to a data frame:
-	biomass <- lapply(days, getTotalBiomassStratum, superind=superind, stratumPolygons=stratumPolygons, superindFilter=superindFilter, strataInd=strataInd, type=type)
+	biomass <- lapply(days, getTotalBiomassStratum, superind = superind, stratumPolygons = stratumPolygons, superindFilter = superindFilter, strataInd = strataInd, type = type)
 	biomass <- do.call("rbind", biomass)
 	biomass <- as.data.frame(biomass)
 	
@@ -1882,7 +1916,7 @@ getTotalBiomass <- function(superind, stratumPolygons, strataInd=NULL, days=NULL
 pelfossDefaults <- function(){
 	defaults <- list(
 		margin = 0.1, # Related to equalEffort
-		bearing = "along",
+		#bearing = "along", # Moved to setSurveyParametersPaper1() on 2019-05-25
 		distsep = 1, # One nmi log distance is standard
 		probfact = 1, # This reserves half of the probability of drawing trawls to the NASC and half to chance
 		radius = 10, # Increase this to include more superindividuals in the trawl sample
@@ -1892,8 +1926,8 @@ pelfossDefaults <- function(){
 		platform = 4174, # G.O.Sars
 		distance = 5, # Trawling distance, equal for all stations, thus ineffective in an acousic-trawl survey
 		sweepWidth = 25, # Seewp width, see distance above
-		condPar=NULL, 
-		LcmMean=NULL
+		condPar = NULL, 
+		LcmMean = NULL
 	)
 	defaults
 }
@@ -1902,7 +1936,7 @@ pelfossDefaults <- function(){
 #' @keywords internal
 #' @rdname pelfossDefaults
 #' 
-getPelfossSkeleton <- function(dir, run="Run1"){
+getPelfossSkeleton <- function(dir, run = "Run1"){
 	# The parameter 'run' can be given as empty, which gives an error (used in getPelfossPaths()):
 	if(length(run) == 0 || nchar(run) == 0){
 		stop("The argument run must be given as a positive length string")
@@ -1919,24 +1953,35 @@ getPelfossSkeleton <- function(dir, run="Run1"){
 	thisrundir <- file.path(runsdir, run)
 	# Define the subdirs of the run:
 	reportsdir <- file.path(thisrundir, "reports")
+	plotsdir <- file.path(thisrundir, "plots")
+	surveyPlotsdir <- file.path(plotsdir, "SurveyPlots")
 	XMLfilesdir <- file.path(thisrundir, "XMLfiles")
 	projectdir <- file.path(thisrundir, "project")
-	all_outputdir <- file.path(thisrundir, "all_output")
-	all_plotdir <- file.path(thisrundir, "all_plot")
+	
+	#AllSurveysReports <- file.path(reportsdir, "AllSurveysReports.txt")
+	#AllSurveysReportsSmall <- file.path(reportsdir, "AllSurveysReportsSmall.txt")
+	AllSurveysReports <- file.path(reportsdir, "AllSurveysReports.RData")
+	AllSurveysReportsSmall <- file.path(reportsdir, "AllSurveysReportsSmall.RData")
 	
 	# Return the paths:
 	list(
-		datadir = datadir, 
-		runsdir = runsdir, 
-		thisrundir = thisrundir, 
-		modeldir = modeldir, 
-		stratumdir = stratumdir, 
-		fisherydir = fisherydir, 
-		reportsdir = reportsdir, 
-		XMLfilesdir = XMLfilesdir, 
-		projectdir = projectdir, 
-		all_outputdir = all_outputdir, 
-		all_plotdir = all_plotdir
+		dirs = list(
+			datadir = datadir, 
+			runsdir = runsdir, 
+			thisrundir = thisrundir, 
+			modeldir = modeldir, 
+			stratumdir = stratumdir, 
+			fisherydir = fisherydir, 
+			reportsdir = reportsdir, 
+			plotsdir = plotsdir, 
+			surveyPlotsdir = surveyPlotsdir, 
+			XMLfilesdir = XMLfilesdir, 
+			projectdir = projectdir
+		), 
+		files = list(
+			AllSurveysReports = AllSurveysReports, 
+			AllSurveysReportsSmall = AllSurveysReportsSmall
+		)
 	)
 }
 #'
@@ -1945,64 +1990,72 @@ getPelfossSkeleton <- function(dir, run="Run1"){
 #' @importFrom utils head
 #' @rdname pelfossDefaults
 #' 
-getPelfossPaths <- function(dirs, run="Run1", survey="Herring_IESNS", year=2010, res=4, reversed=FALSE, dateshift=0, seed=0){
+getPelfossPaths <- function(dirs, run = "Run1", survey = "Herring_IESNS", year = 2010, res = 4, reversed = FALSE, dateshift = 0, seed = 0){
 	# If the dirs is given as a single directory, use the default structure, reuqiring the 'run' parameter to be set:
 	if(length(dirs) == 1){
-		dirs <- getPelfossSkeleton(dirs, run=run)
+		dirs <- getPelfossSkeleton(dirs, run = run)$dirs
 	}
 	
 	# Extract species name from the survey:
-	species <- strsplit(survey, "_", fixed=TRUE)[[1]][1]
+	species <- strsplit(survey, "_", fixed = TRUE)[[1]][1]
 	# List the files and identify the file type (one of biomass and superind):
-	data <- list.files(file.path(dirs$modeldir, species, paste0("res_", res, "km"), paste0("year_", year)), full.names=TRUE)
-	type <- sapply(strsplit(basename(data), "_", fixed=TRUE), head, 1)
+	data <- list.files(file.path(dirs$modeldir, species, paste0("res_", res, "km"), paste0("year_", year)), full.names = TRUE)
+	type <- sapply(strsplit(basename(data), "_", fixed = TRUE), head, 1)
 	
 	# Get the biomass and superind files:
 	biomass <- data[tolower(type) == "biomass"]
 	superind <- data[tolower(type) == "superind"]
 	# Get stratum file:
-	stratum <- list.files(file.path(dirs$stratumdir, survey), full.names=TRUE)[1]
+	stratumFile <- list.files(file.path(dirs$stratumdir, survey), full.names = TRUE)[1]
 	
 	# Get the directory in which to copy the StoX project containing all files and plots:
-	direction <- c("Normal", "Reversed")[reversed + 1]
-	projectPath <- file.path(dirs$projectdir, survey, paste0("res_", res, "km"), paste0("year_", year), paste0("direction_", direction, "_timing_", dateshift, "days"), paste0("seed_", seed))
+	#direction <- c("Normal", "Reversed")[reversed + 1]
+	direction <- c("Norm", "Rev")[reversed + 1]
+	resolutionString <- paste0("res_", res, "km")
+	yearString <- paste0("year_", year)
+	#directionDateshiftString <- paste0("direction_", direction, "_timing_", dateshift, "days")
+	directionDateshiftString <- paste0("dir_", direction, "_tim_", dateshift, "d")
+	seedString <- paste0("seed_", seed)
+	projectPathSansProcejtName <- file.path(dirs$projectdir, survey, resolutionString, yearString, directionDateshiftString, seedString)
 	
-	projectPath <- file.path(projectPath, "PelfossProjectRstox")
+	projectPath <- file.path(projectPathSansProcejtName, "StoX")
 	projectPaths <- getProjectPaths(projectPath)
 	projectRData <- file.path(projectPaths$RReportDir, "pelfossOutput.RData")
-	plotSuperIndDir <- file.path(projectPaths$RReportDir, "plotSuperInd")
-	
+	mapsDir <- file.path(dirs$plotsdir, "maps")
 	
 	# Get fishery file:
-	fishery <- list.files(file.path(dirs$fisherydir, species), full.names=TRUE)[1]
+	fishery <- list.files(file.path(dirs$fisherydir, species), full.names = TRUE)[1]
+	
+	# Get a full description of the survey:
+	surveyFull <- paste(survey, directionDateshiftString, sep = "_")
 	
 	# Return the paths:
-	list(biomass=biomass, superind=superind, stratum=stratum, species=species, projectPath=projectPath, projectRData=projectRData, plotSuperIndDir=plotSuperIndDir, survey=survey, fishery=fishery)
+	c(list(biomass = biomass, superind = superind, stratumFile = stratumFile, species = species, projectPath = projectPath, projectRData = projectRData, mapsDir = mapsDir, survey = survey, surveyFull = surveyFull, fishery = fishery), dirs)
 }
 #'
 #' @export
 #' @keywords internal
 #' @rdname pelfossDefaults
 #' 
-createPelfossSkeleton <- function(dir, run="Run1"){
+createPelfossSkeleton <- function(dir, run = "Run1"){
 	# Define the folders of the pelfoss folder structure:
-	dirs <- unlist(getPelfossSkeleton(dir, run=run))
+	dirs <- unlist(getPelfossSkeleton(dir, run = run)$dirs)
 	#dirs <- file.path(dir, c("data", "fishery", "reports", "stratum", "XMLfiles"))
-	lapply(dirs, dir.create, recursive=TRUE)
+	lapply(dirs, dir.create, recursive = TRUE)
 }
 #'
 #' @export
 #' @keywords internal
 #' @rdname pelfossDefaults
 #' 
-fitLengthWeightSuperind <- function(superindDay, superind, count="inumb", superindFilter=NULL, stratumPolygons=NULL, a=NULL, b=NULL, transectsXyOfDay=NULL, insideRange=NULL){
+fitLengthWeightSuperind <- function(superindDay, superind, count = "inumb", superindFilter = NULL, stratumPolygons = NULL, a = NULL, b = NULL, transectsXyOfDay = NULL, insideRange = NULL){
 	# Get the superindividual data of the requested day(s):
-	superind1 <- getSuperindOfDay(superind=superind, superindDay=superindDay, superindFilter=superindFilter, stratumPolygons=stratumPolygons, transectsXyOfDay=transectsXyOfDay, insideRange=insideRange)
+	superind1 <- getSuperindOfDay(superind = superind, superindDay = superindDay, superindFilter = superindFilter, stratumPolygons = stratumPolygons, transectsXyOfDay = transectsXyOfDay, insideRange = insideRange)
 	
 	# Define the data frame of weight and length:
 	data <- as.data.frame(superind1[c("weight", "length", "inumb")])
 	
-	fitLengthWeight(data, count=if(length(count)) data[[count]] else NULL, a=a, b=b)
+	fitLengthWeight(data, count = if(length(count)) data[[count]] else NULL, a = a, b = b)
 }
 #'
 #' @export
@@ -2010,7 +2063,7 @@ fitLengthWeightSuperind <- function(superindDay, superind, count="inumb", superi
 #' @importFrom stats coef lm
 #' @rdname pelfossDefaults
 #' 
-fitLengthWeight <- function(L, W=NULL, a=NULL, b=NULL, count=NULL, filter=NULL){
+fitLengthWeight <- function(L, W = NULL, a = NULL, b = NULL, count = NULL, filter = NULL){
 	# The standard allomettric formula is 
 	#    W = a * L^b, 
 	# where W is weight and L is length, and a and b are parameters.
@@ -2020,7 +2073,7 @@ fitLengthWeight <- function(L, W=NULL, a=NULL, b=NULL, count=NULL, filter=NULL){
 	
 	# Read the input data, and create a data frame:
 	if(length(L)>0 && length(L) == length(W)){
-		data <- data.frame(length=L, weight=W)
+		data <- data.frame(length = L, weight = W)
 	}
 	else if(is.data.frame(L) && all(c("length", "weight") %in% names(L))){
 		data <- L
@@ -2063,7 +2116,7 @@ fitLengthWeight <- function(L, W=NULL, a=NULL, b=NULL, count=NULL, filter=NULL){
 	}
 	
 	
-	fit <- coef(lm(formula, weights=data$count, data=data))
+	fit <- coef(lm(formula, weights = data$count, data = data))
 	#fit <- coef(lm(formula, weights=data$count * data$length, data=data))
 	
 	# Transform a:
@@ -2075,7 +2128,7 @@ fitLengthWeight <- function(L, W=NULL, a=NULL, b=NULL, count=NULL, filter=NULL){
 	names(fit) <- fitnames
 	
 	
-	out <- list(fit=fit, data=data, par=list(a=a, a=b))
+	out <- list(fit = fit, data = data, par = list(a = a, a = b))
 
 	return(out)
 }
@@ -2085,70 +2138,16 @@ fitLengthWeight <- function(L, W=NULL, a=NULL, b=NULL, count=NULL, filter=NULL){
 #' @importFrom ggplot2 ggplot aes_string geom_jitter geom_point geom_path
 #' @rdname pelfossDefaults
 #' 
-plotLengthWeight <- function(x, cols=c(1, 2), useJitter=FALSE, ...){
-	p <- ggplot(data=x$data, aes_string(x="length", y="weight", if(length(x$data$count)) color=x$data$count))
+plotLengthWeight <- function(x, cols = c(1, 2), useJitter = FALSE, ...){
+	p <- ggplot(data = x$data, aes_string(x = "length", y = "weight", if(length(x$data$count)) color = x$data$count))
 	
 	p <- p + do.call(if(useJitter) geom_jitter else geom_point, list(...))
 
-	rangeL <- range(x$data$length, na.rm=TRUE)
-	gridL <- seq(rangeL[1], rangeL[2], l=100)
-	p <- p + geom_path(data=data.frame(x=gridL, y=x$fit["a"] * gridL^x$fit["b"]), aes_string(x="x", y="y"), color=cols[2])
+	rangeL <- range(x$data$length, na.rm = TRUE)
+	gridL <- seq(rangeL[1], rangeL[2], l = 100)
+	p <- p + geom_path(data = data.frame(x = gridL, y = x$fit["a"] * gridL^x$fit["b"]), aes_string(x = "x", y = "y"), color = cols[2])
 	p
 }
-
-
-
-
-
-
-
-
-
-	
-	
-### 	
-### 	
-### 	
-### 	# Thus we transform W and L according to this fomula, and transforms any estimate of a in the output:
-### 	logW <- log(W)
-### 	logL <- log(L)
-### 	
-### 	useExp <- 0
-### 	if(length(a)==0 && length(b)==1){
-### 		formula <- logW - b*logL ~ 1
-### 		fitnames <- "a"
-### 		useExp <- 1
-### 	}
-### 	else if(length(a)==1 && length(b)==0){
-### 		formula <- logW - a ~ logL + 0
-### 		fitnames <- "b"
-### 	}
-### 	else if(length(a)==0 && length(b)==0){
-### 		formula <- logW ~ logL + 1
-### 		fitnames <- c("a", "b")
-### 		useExp <- 1
-### 	}
-### 	else{
-### 		warning("One of a or b must be empty, otherwise nothing will be estimated")
-### 		return(NULL)
-### 	}
-### 	
-### 	fit <- coef(lm(formula, weights=weights))
-### 	
-### 	# Transform a:
-### 	if(useExp==1){
-### 		fit[1] <- exp(out[1])
-### 	}
-### 	
-### 	names(fit) <- fitnames
-### 	
-### 	out <- list(fit=fit, W=W, L=L, weights=weights, input_a=a, input_b=b)
-### 
-### 	return(out)
-### }
-### 
-
-
 
 
 #*********************************************
@@ -2167,8 +2166,8 @@ getFisheryWeights <- function(fisheryFile, stratumFile, strata, startdate, numda
 	# Function for summing the weight inside each stratum:
 	insideStratum <- function(stratum, fishery, stratumPolygon, startdate, numdays){
 		# Get the rows inside the given date interval:
-		dateInt <- paste(fishery$year[1], startdate, sep="/")
-		dateInt <- as.Date(dateInt, format="%Y/%d/%m") + c(0, numdays)
+		dateInt <- paste(fishery$year[1], startdate, sep = "/")
+		dateInt <- as.Date(dateInt, format = "%Y/%d/%m") + c(0, numdays)
 
 		insideDate <- dateInt[1] <= fishery$DATE & fishery$DATE <= dateInt[2]
 		allWeight <- sum(fishery$VEKT)
@@ -2183,7 +2182,7 @@ getFisheryWeights <- function(fisheryFile, stratumFile, strata, startdate, numda
 		)
 		fishery <- fishery[inside, ]
 		
-		print(data.frame(allWeightStratum=sum(fishery$VEKT), allWeightDates=allWeightDates, allWeight=allWeight))
+		print(data.frame(allWeightStratum = sum(fishery$VEKT), allWeightDates = allWeightDates, allWeight = allWeight))
 	
 		sum(fishery$VEKT)
 	}
@@ -2198,7 +2197,7 @@ getFisheryWeights <- function(fisheryFile, stratumFile, strata, startdate, numda
 	
 	
 	
-	sapply(strata, insideStratum, fishery=fishery, stratumPolygon=stratumPolygon, startdate=startdate, numdays=numdays)
+	sapply(strata, insideStratum, fishery = fishery, stratumPolygon = stratumPolygon, startdate = startdate, numdays = numdays)
 }
 
 #*********************************************
@@ -2212,16 +2211,18 @@ getFisheryWeights <- function(fisheryFile, stratumFile, strata, startdate, numda
 #'
 #' @export
 #'
-setSurveyParametersPaper1 <- function(run, dir, survey="Herring_IESNS", type="RectEnclZZ"){
+setSurveyParametersPaper1 <- function(run, dir, survey = "Herring_IESNS", type = "RectEnclZZ"){
 	# Function for getting the effort in each stratum as the total catch by the fishery:
-	getFisheryHours <- function(run, dir, survey, strata, startdate, numdays=1){
-		files <- getPelfossPaths(run=run, dir=dir, survey=survey)
+	getFisheryHours <- function(run, dir, survey, strata, startdate, numdays = 1){
+		files <- getPelfossPaths(run = run, dir = dir, survey = survey)
 		fisheryFile <- files$fishery
-		stratumFile <- files$stratum
-		hours <- getFisheryWeights(fisheryFile=fisheryFile, stratumFile=stratumFile, strata=strata, startdate=startdate, numdays=numdays)
+		stratumFile <- files$stratumFile
+		hours <- getFisheryWeights(fisheryFile = fisheryFile, stratumFile = stratumFile, strata = strata, startdate = startdate, numdays = numdays)
 		hours <- hours / sum(hours) * numdays * 24
 		hours
 	}
+	
+	bearing = "along"
 	
 	if(survey == "Herring_IESNS"){
 		nstrata <- 4
@@ -2277,12 +2278,12 @@ setSurveyParametersPaper1 <- function(run, dir, survey="Herring_IESNS", type="Re
 		TS0 <- -71.9
 		
 		# Get the distribution of catches in the strata:
-		hours <- getFisheryHours(run=run, dir=dir, survey=survey, strata=strata, startdate=startdate, numdays=numdays)
+		hours <- getFisheryHours(run = run, dir = dir, survey = survey, strata = strata, startdate = startdate, numdays = numdays)
 		print(hours)
 		
 		#files <- getPelfossPaths(survey=survey, dir=dir)
 		#fisheryFile <- files$fishery
-		#stratumFile <- files$stratum
+		#stratumFile <- files$stratumFile
 		#hours <- getFisheryWeights(fisheryFile=fisheryFile, stratumFile=stratumFile, strata=strata, startdate=startdate, numdays=numdays, survey=survey)
 		#hours <- hours / sum(hours) * numdays * 24
 		
@@ -2355,8 +2356,10 @@ setSurveyParametersPaper1 <- function(run, dir, survey="Herring_IESNS", type="Re
 		superindFilter <- NULL
 		
 		# Get the distribution of catches in the strata:
-		hours <- getFisheryHours(run=run, dir=dir, survey=survey, strata=strata, startdate=startdate, numdays=numdays)
+		hours <- getFisheryHours(run = run, dir = dir, survey = survey, strata = strata, startdate = startdate, numdays = numdays)
 		round(hours / sum(hours) * 100) # 11, 89
+		
+		bearing = "across"
 	}
 	else {
 		stop(paste("Survey", survey, "not implemented (use 'Herring_IESNS', 'Herring_NASSHS' or 'Mackerel_IESSNS')."))
@@ -2377,7 +2380,8 @@ setSurveyParametersPaper1 <- function(run, dir, survey="Herring_IESNS", type="Re
 		m = m,
 		TS0 = TS0,
 		superindFilter = superindFilter, 
-		type = type
+		type = type, 
+		bearing = bearing
 	)
 	
 	# Chech that the length of strata matches the nstrata:
@@ -2386,7 +2390,7 @@ setSurveyParametersPaper1 <- function(run, dir, survey="Herring_IESNS", type="Re
 	}
 	
 	# Add number of trawls from the trawling density input:
-	sumHours <- if(is.list(out$hours)) unlist(out$hours) else sum(rep(out$hours, length.out=out$nstrata))
+	sumHours <- if(is.list(out$hours)) unlist(out$hours) else sum(rep(out$hours, length.out = out$nstrata))
 	out$nTrawl <- round(out$trawlDens * sumHours * out$knots)
 	
 	return(out)
@@ -2410,7 +2414,7 @@ setSurveyParametersPaper1 <- function(run, dir, survey="Herring_IESNS", type="Re
 #'
 #' @export
 #'
-runAll <- function(spec, run, dir, surveyPar, seed=1, nboot=100, radius=10, subset="all", ...){
+runAll <- function(spec, run, dir, surveyPar, seed = 1, nboot = 100, radius = 10, subset = "all", ...){
 	# Run all the cased in 'spec':
 	runs <- nrow(spec)
 	times <- double(runs)
@@ -2425,7 +2429,7 @@ runAll <- function(spec, run, dir, surveyPar, seed=1, nboot=100, radius=10, subs
 		thisSpecList <- spec[i,]
 		cat("############################################################\nProject:", surveyPar$survey, "\n")
 		print(thisSpecList)
-		tempTimes <- system.time(tempFiles <- do.call(runPelfoss, c(list(run=run, dir=dir, surveyPar=surveyPar, seed=seed, nboot=nboot, ...), thisSpecList, list(radius=radius))))
+		tempTimes <- system.time(tempFiles <- do.call(runPelfoss, c(list(run = run, dir = dir, surveyPar = surveyPar, seed = seed, nboot = nboot, ...), thisSpecList, list(radius = radius))))
 		if(length(tempFiles)){
 			files[i] <- tempFiles
 		}
@@ -2435,7 +2439,7 @@ runAll <- function(spec, run, dir, surveyPar, seed=1, nboot=100, radius=10, subs
 	# Return the process times:
 	print(sum(times))
 	cat("############################################################\n\n")
-	list(times=times, files=files)
+	list(times = times, files = files)
 }
 
 #*********************************************
@@ -2498,7 +2502,7 @@ runAll <- function(spec, run, dir, surveyPar, seed=1, nboot=100, radius=10, subs
 #' runs <- c(
 #' 	"Parallel", 
 #' 	"Parallel_Fixed_abL", 
-#' 	"Parallel_Fixed_abL_SpeedTimes50", 
+#' 	"Parallel_Fixed_abL_SpeedTimes50"
 #' )
 #' # Run for seeds 1 and 2:
 #' seeds <- c(1, 2)
@@ -2526,7 +2530,7 @@ runAll <- function(spec, run, dir, surveyPar, seed=1, nboot=100, radius=10, subs
 #' for(seed %in% seeds){
 #' 	Parallel_Fixed_abL <- runAllPelfossPaper1(
 #' 		type=type, run=runs[2], survey=survey, dir=dir, # Paths and names
-#' 		condPar=c(0.3, 2), LcmMean=30, 
+#' 		condPar=c(0.01, 3), LcmMean=30, 
 #' 		year=year, res=res, dateshift=dateshift, reversed=reversed, # spec
 #' 		seed=seed, nboot=nboot, radius=radius, subset="all", cores=cores
 #' 	)
@@ -2540,7 +2544,7 @@ runAll <- function(spec, run, dir, surveyPar, seed=1, nboot=100, radius=10, subs
 #' for(seed %in% seeds){
 #' 	Parallel_Fixed_abL <- runAllPelfossPaper1(
 #' 		type=type, run=runs[3], survey=survey, dir=dir, # Paths and names
-#' 		speedFact=50, condPar=c(0.3, 2), LcmMean=30, 
+#' 		speedFact=50, condPar=c(0.01, 3), LcmMean=30, 
 #' 		year=year, res=res, dateshift=dateshift, reversed=reversed, # spec
 #' 		seed=seed, nboot=nboot, radius=radius, subset="all", cores=cores
 #' 	)
@@ -2563,11 +2567,11 @@ runAll <- function(spec, run, dir, surveyPar, seed=1, nboot=100, radius=10, subs
 #' ##### Plots #####
 #' #################
 #' #  Plots with ylim up ro 2.15:
-#' temp <- lapply(runs, plotAllPelfossReports, dir=dir, by="InsideAll", ylim=c(0, 2.15), save="allPlots_max2.15_cv_allSeeds", case_adj=c(0.5, 0.95), add.cv=TRUE)
+#' temp <- lapply(runs, plotPelfossReports, dir = dir, by = "InsideAll", ylim = c(0, 2.15), subdir = "allPlots_max2.15_cv_allSeeds", case_adj = c(0.5, 0.95), add.cv = TRUE)
 #' 
 #' # Read the reports back in from the experiment referred to in the PELFOSS Paper 1:
 #' run <- runs[2]
-#' r <- readAllPelfossReports(run, dir=dir)
+#' r <- readPelfossReports(run, dir=dir)
 #' 
 #' # Write a table for use in supplementary materials:
 #' columnsToKeep <- c(
@@ -2597,7 +2601,7 @@ runAll <- function(spec, run, dir, surveyPar, seed=1, nboot=100, radius=10, subs
 #' rsmall <- r[columnsToKeep]
 #' names(rsmall) <- newNames
 #' head(rsmall)
-#' outfile <- file.path(dir, "runs", run, "reports", "allReportsSmall.txt")
+#' outfile <- file.path(dir, "runs", run, "reports", "AllSurveysReportsSmall.txt")
 #' write.table(rsmall, file=outfile, sep="\t", dec=".", row.names=FALSE, fileEncoding="UTF-8")
 #' 
 #' #######################
@@ -2637,27 +2641,28 @@ runAll <- function(spec, run, dir, surveyPar, seed=1, nboot=100, radius=10, subs
 #' diff(range_Herring_NASSHS_fishery) / mean(range_Herring_NASSHS_fishery)
 #' }
 runAllPelfossPaper1 <- function(
-	type="Parallel", run=type, survey="Herring_IESNS", dir="~/Projects/PELFOSS/delphi", # Paths and names
-	speedFact=1, condPar=NULL, LcmMean=NULL, 
-	year=c(2010, 2012), res=c(4, 10), dateshift=c(-30, 0, 30), reversed=c(FALSE, TRUE), # spec
-	seed=1, nboot=100, radius=10, subset="all", cores=1, # Global settings
+	dir, type = "Parallel", run = type, survey = "Herring_IESNS", # Paths and names
+	speedFact = 1, condPar = NULL, LcmMean = NULL, 
+	year = c(2010, 2012), res = c(4, 10), dateshift = c(-30, 0, 30), reversed = c(FALSE, TRUE), # spec
+	seed = 1, nboot = 100, radius = 10, subset = "all", cores = 1, # Global settings
 	...){
 	
 	# Create a data frame of the grid of specifications for the runs. Year and resolution are combined, whereas the result is expanded with dateshift and reversed:
-	spec <- expand.grid(year=year, dateshift=dateshift, reversed=reversed)
+	spec <- expand.grid(year = year, dateshift = dateshift, reversed = reversed)
 	# Add resolution given year:
 	spec$res <- res[match(spec$year, year)]
 	spec
 	
 	# Save all the surveyPar lists:
 	out <- list()
+	LcmMean <- rep(LcmMean, length.out = length(survey))
 	
 	# Run through the surveys:
 	for(i in seq_along(survey)){
-		surveyPar <- setSurveyParametersPaper1(run=run, dir=dir, survey=survey[i], type=type)
+		surveyPar <- setSurveyParametersPaper1(run = run, dir = dir, survey = survey[i], type = type)
 		surveyPar <- adjustSpeed(surveyPar, speedFact)
-		runtimes <- runAll(spec=spec, run=run, dir=dir, surveyPar=surveyPar, seed=seed, nboot=nboot, radius=radius, subset=subset, condPar=condPar, LcmMean=LcmMean, cores=cores)
-		out[[i]] <- list(surveyPar=surveyPar, spec=spec, seed=seed, nboot=nboot, radius=radius, subset=subset, cores=cores, runtimes=runtimes)
+		runtimes <- runAll(spec = spec, run = run, dir = dir, surveyPar = surveyPar, seed = seed, nboot = nboot, radius = radius, subset = subset, condPar = condPar, LcmMean = LcmMean[i], cores = cores)
+		out[[i]] <- list(surveyPar = surveyPar, spec = spec, seed = seed, nboot = nboot, radius = radius, subset = subset, cores = cores, runtimes = runtimes)
 	}
 	
 	return(out)
@@ -2670,7 +2675,7 @@ runAllPelfossPaper1 <- function(
 #' @param x		The output from \code{\link{biomass2tsb}} or \code{\link{runPelfoss}}.
 #' @param fact	A value below which NASC values are omitted when plotted as black dots with size proportional to NASC^NASCexp.
 #'
-adjustSpeed <- function(x, fact=1){
+adjustSpeed <- function(x, fact = 1){
 	x$knots <- x$knots * fact
 	if(is.list(x$hours)){
 		x$hours <- lapply(x$hours, "/", fact)
@@ -2694,14 +2699,37 @@ adjustSpeed <- function(x, fact=1){
 #'
 #' @export
 #'
-readAllPelfossReports <- function(run, dir, seed=NULL){
-	allReports <- file.path(dir, "runs", run, "reports", "allReports.txt")
-	out <- read.table(allReports, sep="\t", header=TRUE, stringsAsFactors=FALSE)
+readPelfossReports <- function(run, dir, seed = NULL, small = FALSE){
+	# Get the report file name:
+	file <- getPelfossReportFileName(run = run, dir = dir, small = small)
+	
+	# Read the file:
+	out <- get(load(file))
 	# Select seed:
 	if(length(seed)){
 		out <- subset(out, Seed==seed)
 	}
 	out
+}
+writePelfossReports <- function(reports, run, dir){
+	# Get also the small version of the report:
+	reports_small <- simplifyAllTSB(reports)
+	
+	# Get the report file names:
+	file <- getPelfossReportFileName(run = run, dir = dir, small = FALSE)
+	fileSmall <- getPelfossReportFileName(run = run, dir = dir, small = TRUE)
+	
+	# Save the reports:
+	save(reports, file = file)
+	save(reports_small, file = fileSmall)
+
+	c(file = file, fileSmall = fileSmall)
+}
+getPelfossReportFileName <- function(run, dir, small = FALSE){
+	# Get the report file names:
+	files <- getPelfossSkeleton(dir, run = run)$files
+	file <- files[[paste(c("AllSurveysReports", if(small) "Small"), collapse = "")]]		
+	file
 }
 
 #*********************************************
@@ -2713,13 +2741,14 @@ readAllPelfossReports <- function(run, dir, seed=NULL){
 #' @param by		A string specifying which variable to plot. The options are "Inside" (only inside the strata with positive NASC), InsideAll (inside the strata used in the survey) and "Total" (all possible strata in the strata system).
 #' @param seed		A single integer, or a list of seeds used in the funciton, including the following seeds: ('transect') for drawing transects using surveyPlanner(), ('trawl') for drawing trawl stations along the transects with probability as a funciton of the NASC (see \code{probfact}), and ('bootstrap') for getting the final estimate using runBootstrap() (see \code{nboot}).
 #' @param ylim		The ylim of the plot, useful for setting the same ylim on several related plots.
-#' @param save		The folder in which to put the plots in the "reports" folder of \code{dir}. If TRUE this is interpreted as "allPlots".
+#' @param subdir	The folder in which to put the plots in the "reports" folder of \code{dir}. If TRUE this is interpreted as "allPlots".
 #' @param case_adj	A two element vector giving the adjustment of the labels of each survey (A, B, ...).
 #'
 #' @export
 #' @import ggplot2
 #'
-plotAllPelfossReports <- function(run, dir, by="InsideAll", seed=NULL, ylim=NULL, save=TRUE, case_adj=c(0.15, 0.95), add.cv=FALSE, adds=list()){
+#plotPelfossReports <- function(run, dir, by = "InsideAll", seed = NULL, ylim = NULL, subdir = TRUE, case_adj = c(0.15, 0.95), add.cv = FALSE, width = NA, height = NA, adds = list()){
+plotPelfossReports <- function(run, dir, var = c("TSB_5percentByInsideAll", "TSB_meanByInsideAll", "TSB_95percentByInsideAll"), seed = NULL, ylim = NULL, subdir = TRUE, case_adj = c(0.15, 0.95), add.cv = FALSE, width = NA, height = NA, adds = list()){
 	
 	# Simple funciton for replacing an underscore by line break, used to print the cases in the plot:
 	addline_format <- function(x, ...){
@@ -2727,14 +2756,15 @@ plotAllPelfossReports <- function(run, dir, by="InsideAll", seed=NULL, ylim=NULL
 	}
 	
 	# Read the report:
-	report <- readAllPelfossReports(run=run, dir=dir, seed=seed)
+	report <- readPelfossReports(run = run, dir = dir, seed = seed)
 
 	# Add case number and convert to factor:
 	report$CaseNr <- seq_len(nrow(report))
 	report$Direction <- as.factor(report$Direction)
 	report$Resolution <- as.factor(report$Resolution)
 	report$Timing <- as.factor(report$Timing)
-	report$Resolution_Direction <- as.factor(paste0("Res/year: ", report$Resolution, "/", report$Year, " ", "Dir: ", report$Direction))
+	#report$Resolution_Direction <- as.factor(paste0("Res/year: ", report$Resolution, "/", report$Year, " ", "Dir: ", report$Direction))
+	report$Resolution_Direction <- as.factor(report$Direction)
 	
 	# Modify the data by the optional 'adds':
 	for(i in seq_along(adds)){
@@ -2758,26 +2788,26 @@ plotAllPelfossReports <- function(run, dir, by="InsideAll", seed=NULL, ylim=NULL
 	at <- sep[-1] - diff(sep)/2
 	surveyNames <- unique(report$Survey)
 	
-	var5 <- paste0("TSB_5percentBy", by)
-	varMean <- paste0("TSB_meanBy", by)
-	var95 <- paste0("TSB_95percentBy", by)
+	#var5 <- paste0("TSB_5percentBy", by)
+	#varMean <- paste0("TSB_meanBy", by)
+	#var95 <- paste0("TSB_95percentBy", by)
 
 	if(length(ylim) == 0){
 		ylim <- c(0, max(report[[var95]]))
 	}
 	
 	# With error bars:
-	p <- ggplot(data=report, aes_string(x="CaseNr", y=varMean, group="Survey", colour="Timing")) + 
-	    geom_errorbar(aes_string(ymin=var5, ymax=var95), width=0.4) +
+	p <- ggplot(data = report, aes_string(x = "CaseNr", y = var[2], group = "Survey", colour = "Timing")) + 
+	    geom_errorbar(aes_string(ymin = var[1], ymax = var[3]), width = 0.4) +
 	    #geom_line() +
-	    geom_point(aes(shape=Resolution_Direction), size=4) + 
-		geom_abline(intercept=1, slope=0) + 
-		geom_vline(xintercept=sep, lty=2) + 
+	    geom_point(aes(shape = Resolution_Direction), size = 4) + 
+		geom_abline(intercept = 1, slope = 0) + 
+		geom_vline(xintercept = sep, lty = 2) + 
 		#geom_text(data=data.frame(x=sep[-length(sep)], y=max(report$TSB_95percentByInsideAll) * 0.9), aes(x=x, y=y, label=paste("(", toupper(letters[seq_len(length(x))]), ")"))) + 
-		annotate("text", x=sep[-length(sep)] + mean(diff(sep)) * case_adj[1], y=max(ylim) * case_adj[2], label=paste0("(", toupper(letters[seq_len(length(sep) - 1)]), ")"), size=5) + 
-		scale_shape_manual(values=c(17, 19, 2, 1)) + labs(shape='Resolution and direction') + ylab("Estiamted divided by true biomass inside survey region") + xlab("") + 
-		scale_x_continuous(breaks=at, labels=addline_format(surveyNames)) + ylim(ylim) + 
-		theme(axis.title.y = element_text(size=15), axis.text.x = element_text(size=10, face=c("plain", "plain", "bold", "plain", "plain", "bold")), axis.text.y = element_text(size=15) )
+		annotate("text", x = sep[-length(sep)] + mean(diff(sep)) * case_adj[1], y = max(ylim) * case_adj[2], label = paste0("(", toupper(letters[seq_len(length(sep) - 1)]), ")"), size = 5) + 
+		scale_shape_manual(values = c(17, 19, 2, 1)) + labs(shape = 'Direction') + ylab("Estimated divided by true biomass inside survey region") + xlab("") + 
+		scale_x_continuous(breaks = at, labels = addline_format(surveyNames)) + ylim(ylim) + 
+		theme(axis.title.y = element_text(size = 15), axis.text.x = element_text(size = 10, face = c("plain", "plain", "bold", "plain", "plain", "bold")), axis.text.y = element_text(size = 15) )
 	
 	if(add.cv){
 		cv_breaks <- unique(
@@ -2787,7 +2817,7 @@ plotAllPelfossReports <- function(run, dir, by="InsideAll", seed=NULL, ylim=NULL
 		p <- p + 
 			geom_path(data = report, aes_string(x = "CaseNr", y = "Ab.Sum.cv"), color="black") + 
 			geom_point(data = report, aes_string(x = "CaseNr", y = "Ab.Sum.cv", group = "Survey", colour = "Timing")) + 
-			scale_y_continuous(sec.axis=sec_axis(~., name="CV", breaks=pretty(c(0, max(report[, "Ab.Sum.cv"])))), limits = ylim)
+			scale_y_continuous(sec.axis=sec_axis(~., name = "CV", breaks = pretty(c(0, max(report[, "Ab.Sum.cv"])))), limits = ylim)
 	}
 	#if(length(ylim)){
 	#	p <- p + ylim(ylim)
@@ -2798,17 +2828,18 @@ plotAllPelfossReports <- function(run, dir, by="InsideAll", seed=NULL, ylim=NULL
 	
 	print(p)
 	
-	if(isTRUE(save)){
-		save <- "allPlots"
+	if(isTRUE(subdir)){
+		subdir <- "allPlots"
 	}
-	if(length(save) && is.character(save)){
-		plotFolder <- file.path(dir, "reports", save)
+	if(length(subdir) && is.character(subdir)){
+		plotsdir <- getPelfossSkeleton(dir, run = run)$dirs$plotsdir
+		plotFolder <- file.path(plotsdir, "SurveyEstimate", subdir)
 		pdfFolder <- file.path(plotFolder, "pdf")
 		pngFolder <- file.path(plotFolder, "png")
-		suppressWarnings(dir.create(pdfFolder, recursive=TRUE))
-		suppressWarnings(dir.create(pngFolder, recursive=TRUE))
-		ggsave(file.path(pdfFolder, paste0(run, ".pdf")))
-		ggsave(file.path(pngFolder, paste0(run, ".png")))
+		suppressWarnings(dir.create(pdfFolder, recursive = TRUE))
+		suppressWarnings(dir.create(pngFolder, recursive = TRUE))
+		ggsave(file.path(pdfFolder, paste0(run, ".pdf")), width = width, height = height)
+		ggsave(file.path(pngFolder, paste0(run, ".png")), width = width, height = height)
 	}
 	
 	return(p)
@@ -2825,8 +2856,8 @@ plotAllPelfossReports <- function(run, dir, by="InsideAll", seed=NULL, ylim=NULL
 #'
 #' @export
 #'
-reportAllPelfoss <- function(run, dir, copy=TRUE){
-	report <- getAllTSB(run=run, dir=dir, copy=copy)
+reportAllPelfoss <- function(run, dir, copy = TRUE){
+	report <- getAllTSB(run = run, dir = dir, copy = copy)
 	report$reportsSelection <- report$reports[,c("Survey", "Resolution", "Year", "Direction", "Timing", "midDayOfSurvey", "Seed", "midDayOfSurvey", "Ab.Sum.mean", "Ab.Sum.cv", "ThSB_inside", "ThSB_total", "TSB_meanByInside")]
 	report$par <- getRunPar(report)
 	report
@@ -2839,7 +2870,7 @@ reportAllPelfoss <- function(run, dir, copy=TRUE){
 #'
 getRunPar <- function(x){
 	
-	getSummary <- function(x, label=NULL){
+	getSummary <- function(x, label = NULL){
 		out <- as.data.frame(as.list(c(summary(x))))
 		# remove any repots of NA:
 		out <- out[!startsWith(names(out), "NA")]
@@ -2848,17 +2879,17 @@ getRunPar <- function(x){
 		out$Span <- out$Max - out$Min
 		
 		if(length(label)){
-			names(out) <- paste(label, names(out), sep="_")
+			names(out) <- paste(label, names(out), sep = "_")
 		}
 		out
 	}
 	
 	getRunParOneRun <- function(x){
 		data.frame(
-			getSummary(x$pelfossOutput$transects$Transect$time_mid, label="time_mid"), 
-			getSummary(x$pelfossOutput$transects$Transect$LcmMean, label="LcmMean"), 
-			getSummary(x$pelfossOutput$transects$Transect$condParFactor, label="condParFactor"), 
-			getSummary(x$pelfossOutput$transects$Transect$condParExponent, label="condParExponent")
+			getSummary(x$pelfossOutput$transects$Transect$time_mid, label = "time_mid"), 
+			getSummary(x$pelfossOutput$transects$Transect$LcmMean, label = "LcmMean"), 
+			getSummary(x$pelfossOutput$transects$Transect$condParFactor, label = "condParFactor"), 
+			getSummary(x$pelfossOutput$transects$Transect$condParExponent, label = "condParExponent")
 		)
 	}
 	
@@ -2871,80 +2902,64 @@ getRunPar <- function(x){
 # Function for plotting all days of the modelled fish distribution on top of one of the strata systems:
 #'
 #' @export
+#' @importFrom ggnewscale new_scale_color
 #'
-plotAllDays <- function(survey, days=NULL, dir="~/Projects/PELFOSS/delphi", run="Parallel", year=2012, res=10, reversed=FALSE, dateshift=0, seed=1, centroid=c(0, 68), size=1, alpha=0.5, img="png", addTransects=FALSE, ...){
+plotAllDays <- function(dir, survey, days = NULL, run = "Parallel", year = 2012, res = 10, reversed = FALSE, dateshift = 0, seed = 1, centroid = c(0, 68), size = 1, alpha = 0.5, img = "png", addTransects = FALSE, addSuperInd = TRUE, ageCols = rainbow(4, v = c(0.6, 0.7, 0.8, 1)), transectcol = "black", bordercol = "black", ...){
 
-	##### get file paths: #####
-	# Get files and dirs:
-	files <- getPelfossPaths(dir, run=run, survey=survey, year=year, res=res, reversed=reversed, dateshift=dateshift, seed=seed)
-	
-	plotDir <- file.path(files$plotSuperIndDir, img)
-	suppressWarnings(dir.create(plotDir, recursive=TRUE))
-	##########
-	
-	
 	##### Read data: #####
-	### # Read the super individuals:	
-	### superind <- readNorwecomSuperind(files$superind, centroid=centroid)
+	# Get files and dirs:
+	files <- getPelfossPaths(dir, run = run, survey = survey, year = year, res = res, reversed = reversed, dateshift = dateshift, seed = seed)
+	
+	### # Read the super individuals:
+	superind <- readNorwecomSuperind(files$superind, centroid = centroid)
 	
 	# Read the transects:
-	if(!isFALSE(addTransects)){
+	#if(!isFALSE(addTransects)){
 		load(files$projectRData)
-	}
+		#}
 	##########
 	
-	
-	##### Get day vector and output file paths: #####
-	# Plot each day:
-	ndays <- ncol(superind$longitude)
-	ind <- sprintf(paste0("%0", nchar(ndays), "d"), seq_len(ndays))
-	ncharInd <- nchar(ind[1])
-	fileStam <- paste("Superind", run, year, res, sep="_")
-	indWildcard <- paste0("%", ncharInd, "d")
-	fileNameImages <- paste(paste(fileStam, indWildcard, sep="_"), img, sep=".")
-	fileImages <- file.path(plotDir, fileNameImages)
-	
+	##### get file paths: #####
+	# Get days:
 	if(length(days) == 0){
 		# Get the days correponding to the times of the transects:
 		if(!isFALSE(addTransects)){
 			day <- findInterval(pelfossOutput$transects$Transect$time_mid, superind$time)
 			dayInd <- split(seq_along(day), day)
-			days <- seq(min(day), max(day))
+			#days <- seq(min(day), max(day))
+			days <- seq(min(day), max(day) + 1)
 		}
 		else{
 			days <- seq_len(ndays)
 		}	
 	}
 	
-	# Get the file to which to save the plot:
-	fileName <- paste(paste(fileStam, ind[days], sep="_"), img, sep=".")
-	file <- file.path(plotDir, fileName)
+	##### Get day vector and output file paths: #####
+	#plotDir <- file.path(files$plotSuperIndDir, img)
+	daysZeroPadded <- sprintf(paste0("%0", nchar(max(days)), "d"), days)
+	fileStem <- paste0(files$surveyFull, "_seed_", seed)
+	dirStem <- paste0(fileStem, "_day_", daysZeroPadded[1], "-", daysZeroPadded[length(daysZeroPadded)])
+	fileStem <- paste0(fileStem, "_day_", daysZeroPadded)
+	
+	plotDir <- file.path(files$plotsdir, "maps", dirStem, img)
+	suppressWarnings(dir.create(plotDir, recursive = TRUE))
+	
+	# Get the files to which to save the plots:
+	fileNames <- paste(fileStem, img, sep = ".")
+	files <- file.path(plotDir, fileNames)
 	##########
 	
 	
 	##### Plot the data: #####
 	### # Run the stratum plot:
 	### if(isFALSE(addTransects)){
-	### 	p1 <- plotStratum(files$stratum, quiet=TRUE)
+	### 	p1 <- plotStratum(files$stratumFile, quiet=TRUE)
 	### }
 	
-	browser()
-	message("Here we should implement either biomass field or superindividuals (or both?) in plotPelfoss")
 	# Plot each day:
 	for(i in seq_along(days)){
 		
-		if(isTRUE(addTransects)){
-			p1 <- Rstox::plotStratum(
-				pelfossOutput$transects, 
-				quiet = TRUE, 
-				transectcol = "black", 
-				timerange = c(
-					min(pelfossOutput$transects$Transect$time_mid), 
-					superind$time[days[i]]
-				)
-			)
-		}
-		else if(is.character(addTransects) && identical(tolower(addTransects), "nasc")){
+		if(is.character(addTransects) && identical(tolower(addTransects), "nasc")) {
 			p1 <- plotPelfoss(
 				pelfossOutput, 
 				quiet = TRUE, 
@@ -2956,10 +2971,24 @@ plotAllDays <- function(survey, days=NULL, dir="~/Projects/PELFOSS/delphi", run=
 				...
 			)$p
 		}
+		else {
+			p1 <- Rstox::plotStratum(
+				pelfossOutput$transects, 
+				plot = c("map", "stratum", if(addTransects) "transect"), 
+				quiet = TRUE, 
+				transectcol = transectcol, 
+				bordercol = transectcol, 
+				timerange = c(
+					min(pelfossOutput$transects$Transect$time_mid), 
+					superind$time[days[i]]
+				)
+			)
+		}
+		 
 			
 		# Plot only if there are valid weights:
 		valid <- !is.na(superind$weight[, days[i]])
-		if(max(superind$weight[valid, days[i]], na.rm=TRUE)>0){
+		if(max(superind$weight[valid, days[i]], na.rm = TRUE)>0){
 			
 			# Get the data frame to plot from, by extracting the current day and the valid superindividuals:
 			dat <- data.frame(
@@ -2972,55 +3001,84 @@ plotAllDays <- function(survey, days=NULL, dir="~/Projects/PELFOSS/delphi", run=
 			)
 			
 			# Plot the super individuals:
-			p2 <- p1 + geom_point(data=dat, aes(x=longitude, y=latitude, color=age, fill=mass), alpha=0.5) + 
-				#scale_colour_gradientn(colours=rainbow(4, v=c(0.6, 0.7, 0.8, 1))) + 
-				scale_fill_gradientn(colours=rainbow(4, v=c(0.6, 0.7, 0.8, 1))) + 
-				###scale_size_discrete(range = c(0.1,2)) + 
-				#scale_size_continuous(range = c(0.1,2)) + 
-				#scale_size(range = c(0.1,2)) + 
-				#scale_size_area() + 
-				ggtitle(superind$time[days[i]]
-				)	
+			#p2 <- p1 + geom_point(data=dat, aes(x=longitude, y=latitude, color=age, fill=mass), alpha=0.5) + 
+			#	#scale_colour_gradientn(colours=rainbow(4, v=c(0.6, 0.7, 0.8, 1))) + 
+			#	scale_fill_gradientn(colours=rainbow(4, v=c(0.6, 0.7, 0.8, 1))) + 
+			#	###scale_size_discrete(range = c(0.1,2)) + 
+			#	#scale_size_continuous(range = c(0.1,2)) + 
+			#	#scale_size(range = c(0.1,2)) + 
+			#	#scale_size_area() + 
+			#	ggtitle(superind$time[days[i]]
+			#	)
+			
+			
+			#p2 <- p1 + geom_point(data=dat, aes(x=longitude, y=latitude, color=as.factor(age)), alpha=0.5) + 
+			#	ggtitle(superind$time[days[i]])
+			
+			
+			p2 <- p1 + 
+				new_scale_color() + 
+				geom_point(data = dat, aes(x = longitude, y = latitude, color = age), alpha = 0.5) + 
+				ggtitle(superind$time[days[i]]) + 
+				scale_colour_gradientn(colours = ageCols)
 		}
 		else{
 			p2 <- p1
 		}
 		
-		p2 <- moveGeom(p2, geom="segment", move=100, ind=1)
-		suppressWarnings(p2 <- moveGeom(p2, geom="point", move=100, ind=1))
-		p2 <- moveGeom(p2, geom="text", move=100, ind=1)
+		p2 <- moveGeom(p2, geom = "segment", move = 100, ind = 1)
+		suppressWarnings(p2 <- moveGeom(p2, geom = "point", move = 100, ind = 1))
+		p2 <- moveGeom(p2, geom = "text", move = 100, ind = 1)
 		
 		# Save the plot:
-		ggsave(file[i], plot=p2, device=img)
+		ggsave(files[i], plot = p2, device = img)
 	}
 	##########
 
 	
-	return(file)
+	return(files)
 }
 
 # Function for generating a movie of all the fish distribution plots:
 #'
 #' @export
+#' @importFrom tools file_path_sans_ext
+#' @importFrom utils tail
 #'
-movieAllDays <- function(survey, days=NULL, dir="~/Projects/PELFOSS/delphi", run="Parallel", year=2012, res=10, reversed=FALSE, dateshift=0, seed=1, img="png", mov="mp4", fpsIn=20, fpsOut=fpsIn, bitrate=1e7){
+movieAllDays <- function(dir, days = NULL, mov = "mp4", fpsIn = 5, fpsOut = fpsIn, bitrate = 1e7){
 
-	# Get files and dirs:
-	files <- getPelfossPaths(dir, run=run, survey=survey, year=year, res=res, reversed=reversed, dateshift=dateshift, seed=seed)
+	# Get PELFOSS files and dirs:
+	if(length(dir) && file.exists(dir[1]) && !file.info(dir[1])$isdir) {
+		fileImages <- dir
+	}
+	else {
+		fileImages <- list.files(dir, full.names = TRUE)
+	}
 	
-	# Get the plot files:
-	plotDir <- file.path(files$plotSuperIndDir, img)
-	suppressWarnings(dir.create(plotDir, recursive=TRUE))
-	fileImages <- list.files(plotDir, full.names=TRUE)
 	if(length(days)){
 		fileImages <- fileImages[days]
 	}
 	
+	# Decode the file numbers: 
+	fileStem <- basename(tools::file_path_sans_ext(fileImages[1]))
+	filePartsUnderscore <- strsplit(fileStem, "_", fixed = TRUE)
+	fileStem0 <- sapply(filePartsUnderscore, function(x) paste(x[-length(x)], collapse = "_"))
+	fileNumbers <- sapply(filePartsUnderscore, utils::tail, 1)
+	ncharFileNumbers <- nchar(fileNumbers[1])
+	startNumber <- as.numeric(fileNumbers[1])
+	wildCard <- paste0("%", formatC(ncharFileNumbers, width = 2, format = "d", flag = "0"), "d")
+	fileImagesWildcard <- paste(paste(fileStem0, wildCard, sep = "_"), tools::file_ext(fileImages[1]), sep = ".")
+	fileImages <- file.path(dirname(fileImages[1]), fileImagesWildcard)
+	
+	
+	
 	# Get the path to the movie:
 	if(length(mov)){
-		movieDir <- file.path(files$plotSuperIndDir, mov)
-		suppressWarnings(dir.create(movieDir, recursive=TRUE))
-		fileNameVideo <- paste(fileStam, mov, sep=".")
+		movieDir <- file.path(dirname(dirname(fileImages[1])), mov)
+		suppressWarnings(dir.create(movieDir, recursive = TRUE))
+		#fileStem <- basename(tools::file_path_sans_ext(fileImages[1]))
+		fileStem <- basename(dirname(dirname(fileImages[1])))
+		fileNameVideo <- paste(fileStem, mov, sep = ".")
 		fileVideo <- file.path(movieDir, fileNameVideo)
 	}
 	
@@ -3031,8 +3089,8 @@ movieAllDays <- function(survey, days=NULL, dir="~/Projects/PELFOSS/delphi", run
 			"ffmpeg", 
 			"-y", 
 			"-r", fpsIn, 
-			"-start_number", min(days), 
-			"-i", fileImages, 
+			"-start_number", startNumber, 
+			paste("-i", fileImages, collapse = " "), 
 			"-c:v libx264", 
 			"-pix_fmt yuv420p", 
 			"-r", fpsOut, 
@@ -3046,14 +3104,16 @@ movieAllDays <- function(survey, days=NULL, dir="~/Projects/PELFOSS/delphi", run
 	}
 	##########
 	
+	# Move the file two levels up, to the 
+	
 	return(fileVideo)
 }
 
 # Function to rearrange layes in a ggplot:
-moveGeom <- function(p, geom="segment", move=1, ind=1){
+moveGeom <- function(p, geom = "segment", move = 1, ind = 1){
 	geoms <- sapply(p$layers, function(x) class(x$geom)[1])
 	ord <- seq_along(geoms)
-	hit <- grep(geom, geoms, ignore.case=TRUE)
+	hit <- grep(geom, geoms, ignore.case = TRUE)
 	if(length(hit) > 1){
 		warning("There are ", length(hit), " layers matching the geom ", geom, ". Use 'ind' to select the requested layer, and view layers with p$layers")
 		hit <- hit[ind]
