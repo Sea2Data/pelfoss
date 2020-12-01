@@ -53,6 +53,7 @@ interpolateBiomassToTransects(
   superindFilter = NULL,
   m = 20,
   TS0 = -71.9,
+  b = NULL,
   insideRange = NULL,
   condPar = NULL,
   LcmMean = NULL

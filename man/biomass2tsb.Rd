@@ -28,6 +28,7 @@ biomass2tsb(
   tsn = 161722,
   m = 20,
   TS0 = -71.9,
+  b = NULL,
   condPar = NULL,
   LcmMean = NULL,
   platform = 4174,
