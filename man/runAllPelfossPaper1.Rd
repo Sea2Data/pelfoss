@@ -12,6 +12,7 @@ runAllPelfossPaper1(
   speedFact = 1,
   condPar = NULL,
   LcmMean = NULL,
+  b = NULL,
   year = c(2010, 2012),
   res = c(4, 10),
   dateshift = c(-30, 0, 30),

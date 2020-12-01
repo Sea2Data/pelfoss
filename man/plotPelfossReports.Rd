@@ -15,7 +15,9 @@ plotPelfossReports(
   add.cv = FALSE,
   width = NA,
   height = NA,
-  adds = list()
+  adds = list(),
+  report = NULL,
+  face = NULL
 )
 }
 \arguments{

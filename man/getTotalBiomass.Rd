@@ -2,6 +2,7 @@
 % Please edit documentation in R/pelfoss.R
 \name{getSuperindOfDay}
 \alias{getSuperindOfDay}
+\alias{getDataOfDay}
 \alias{getBiomassOfSurvey}
 \alias{getTotalBiomass}
 \title{Extract dayly subsets of biomass and superind.}
@@ -10,6 +11,15 @@ getSuperindOfDay(
   superind,
   superindDay = NULL,
   superindFilter = NULL,
+  stratumPolygons = NULL,
+  transectsXyOfDay = NULL,
+  insideRange = NULL
+)
+
+getDataOfDay(
+  x,
+  day = NULL,
+  filter = NULL,
   stratumPolygons = NULL,
   transectsXyOfDay = NULL,
   insideRange = NULL
@@ -34,6 +44,8 @@ getTotalBiomass(
 
 \item{stratumPolygons}{A named list of stratum polygons as data frames with longitude in the first column and latitude in the second.}
 
+\item{day}{The day on which to extract the superind data.}
+
 \item{daysOfSurvey}{A vector of the days of the survey over which to average the biomass.}
 
 \item{strataInd}{A vector of indices of the strata to compute the total biomass over.}
@@ -43,8 +55,6 @@ getTotalBiomass(
 \item{type}{A string specifying the type of calculation (first element used), one of "biomass" and "length", returning total biomass and the length that would result in unbiased estimated total biomass if bioass was converted to NASC and aggregated throughout the survey region.}
 
 \item{biomass, superind}{The biomass and superind data read from \code{readNcVarsAndAttrs} (used in \code{readNorwecomBiomass} and \code{readNorwecomSuperind}).}
-
-\item{day}{The day on which to extract the superind data.}
 
 \item{NAsByFirst}{Logical: If TRUE, identify NAs by the first day of the superind data.}
 
